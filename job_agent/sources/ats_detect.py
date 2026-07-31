@@ -16,20 +16,71 @@ import requests
 from .scrapers import _headers, DELAY
 
 
+# Subdomains that turn up on careers pages as CDN, asset or docs hosts and are
+# never a tenant slug. Without this, CoreStack's page — which links
+# files.freshteam.com for an attachment — was attributed to the Freshteam tenant
+# "files", and any such false positive short-circuits the signature table for
+# that company because detect_ats_from_html returns the first match.
+_NOT_A_TENANT = (r"(?!(?:www|files|assets?|static|cdn|img|images|media|video|s3"
+                 r"|api|app|help|support|docs|blog|status|mail|go|link)\b)")
+
 # (platform_name, regex_pattern, param_key)
+#
+# Order matters: detect_ats_from_html returns the FIRST match, so every platform
+# fetch_ats_jobs() can actually fetch is listed before the detection-only tail.
+# A careers page that embeds two ATS widgets then resolves to the one we can
+# read rather than the one we can only name.
 ATS_SIGNATURES = [
-    ("greenhouse",      r"boards\.greenhouse\.io/(?:embed/)?([\w-]+)",                     "board_token"),
-    ("lever",           r"jobs\.lever\.co/([\w-]+)",                                       "site_slug"),
-    ("ashby",           r"jobs\.ashbyhq\.com/([\w.-]+)",                                   "company_name"),
-    ("smartrecruiters", r"careers\.smartrecruiters\.com/([\w-]+)",                         "company_id"),
-    ("workday",         r"([\w-]+)\.(wd\d+)\.myworkdayjobs\.com/([\w-]+)",                "tenant_dc_site"),
-    ("rippling",        r"ats\.rippling\.com/([\w-]+)/jobs",                               "slug"),
-    ("keka",            r"([\w-]+)\.keka\.com/careers",                                    "subdomain"),
-    ("bamboohr",        r"([\w-]+)\.bamboohr\.com/careers/list",                          "company"),
-    ("recruitee",       r"([\w-]+)\.recruitee\.com/(?:offers|jobs)",                      "company"),
-    ("personio",        r"([\w-]+)\.jobs\.personio\.(?:com|de)",                           "company"),
-    ("breezy",          r"([\w-]+)\.breezy\.hr",                                          "company"),
+    # --- fetchable: a public JSON/XML feed exists and ats.py implements it ---
+    # The embedded-iframe form carries the board token in the query string, so
+    # it has to be tried before the generic path form — otherwise the path
+    # segment "job_board" is captured as the token and the fetch 404s.
+    ("greenhouse",      r"boards\.greenhouse\.io/embed/job_board\?for=([\w-]+)",            "board_token"),
+    # Greenhouse moved boards to job-boards.greenhouse.io; the old
+    # boards.greenhouse.io host is still served, so match either.
+    ("greenhouse",      r"(?:job-)?boards\.greenhouse\.io/(?:embed/)?([\w-]+)",             "board_token"),
+    ("greenhouse",      r"boards-api\.greenhouse\.io/v1/boards/([\w-]+)",                   "board_token"),
+    # Lever runs a separate EU cluster on jobs.eu.lever.co.
+    ("lever",           r"jobs\.(?:eu\.)?lever\.co/([\w-]+)",                               "site_slug"),
+    ("ashby",           r"jobs\.ashbyhq\.com/([\w.-]+)",                                    "company_name"),
+    ("smartrecruiters", r"(?:careers|jobs)\.smartrecruiters\.com/([\w-]+)",                 "company_id"),
+    ("workday",         r"([\w-]+)\.(wd\d+)\.myworkdayjobs\.com/([\w-]+)",                  "tenant_dc_site"),
+    ("rippling",        r"ats\.rippling\.com/([\w-]+)/jobs",                                "slug"),
+    # The (?<![\w.-]) guard on every subdomain pattern below stops re.search
+    # from starting mid-label: without it "apply.workable.com" matches from
+    # "pply" and the captured slug is garbage, and a (?!www\.) lookahead alone
+    # is sidestepped the same way. _NOT_A_TENANT then rules out asset hosts.
+    ("recruitee",       rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.recruitee\.com/(?:o|offers|jobs)",  "company"),
+    ("personio",        rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.jobs\.personio\.(?:com|de)",        "company"),
+    ("breezy",          rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.breezy\.hr",                        "company"),
+    ("workable",        r"apply\.workable\.com/(?!api/)([\w-]+)",                                  "company"),
+    ("workable",        rf"(?<![\w.-])(?!apply\b){_NOT_A_TENANT}([\w-]+)\.workable\.com",          "company"),
+    ("keka",            rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.keka\.com/careers",                 "subdomain"),
+    # Envelope confirmed, record fields unverified — see fetch_bamboohr.
+    ("bamboohr",        rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.bamboohr\.com/careers",             "company"),
+
+    # --- detection-only: no guessable public feed, so fetch_ats_jobs returns []
+    # and the watchlist cascade falls through to JSON-LD / rendered-HTML
+    # extraction. Probed and confirmed closed: Freshteam /api/job_postings ->
+    # 404/503, Darwinbox /ms/candidate/careers/getJobs -> 404, PeopleStrong
+    # /api/jobs -> 403, Zoho Recruit portal -> HTML only. They are listed so
+    # scrape-report can attribute a company to its ATS instead of "unknown".
+    ("zohorecruit",     rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.zohorecruit\.(?:com|in|eu)",                 "company"),
+    ("darwinbox",       rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.darwinbox\.(?:com|in)",                      "company"),
+    ("freshteam",       rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.freshteam\.com",                             "company"),
+    ("oraclecloud",     rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.oraclecloud\.com/hcmUI/CandidateExperience", "company"),
+    ("successfactors",  rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.(?:successfactors|sapsf)\.(?:com|eu)",       "company"),
+    ("taleo",           rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.taleo\.net",                                 "company"),
+    ("peoplestrong",    rf"(?<![\w.-]){_NOT_A_TENANT}([\w-]+)\.peoplestrong\.com",                          "company"),
 ]
+
+# Platforms recognised by ATS_SIGNATURES that fetch_ats_jobs() cannot fetch.
+# Kept next to the table so the two never drift: docs/SOURCES.md and
+# scrape-report both read this instead of hard-coding a list.
+DETECTION_ONLY = frozenset({
+    "zohorecruit", "darwinbox", "freshteam", "oraclecloud",
+    "successfactors", "taleo", "peoplestrong",
+})
 
 
 def detect_ats_from_html(html: str, careers_url: str = "") -> tuple[str, dict] | None:
