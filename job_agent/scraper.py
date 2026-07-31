@@ -32,6 +32,8 @@ def run_scrape(cfg: dict, console, progress_callback=None) -> list[SourceResult]
         fetch_adzuna,
         fetch_arbeitnow,
         fetch_ashby,
+        fetch_bamboohr,
+        fetch_breezy,
         fetch_greenhouse,
         fetch_jobicy,
         fetch_jsearch,
@@ -39,17 +41,34 @@ def run_scrape(cfg: dict, console, progress_callback=None) -> list[SourceResult]
         fetch_keka,
         fetch_lever,
         fetch_nextdata,
+        fetch_personio,
+        fetch_recruitee,
         fetch_remotive,
         fetch_remoteok,
         fetch_rippling,
         fetch_smartrecruiters,
+        fetch_workable,
+        fetch_workday,
         scan_watchlist,
         scrape_linkedin,
         scrape_simplyhired,
         scrape_timesjobs,
     )
 
-    src = cfg.get("sources", {})
+    src = dict(cfg.get("sources", {}))
+    # Keyed sources return [] the moment they see a missing credential, so
+    # leaving them on costs one no-op task per query x location — 24 rows of
+    # "0 jobs, no error" in scrape-report, which is exactly what a genuinely
+    # broken source looks like. Turn them off up front and say why once.
+    import os as _os
+    for _name, _env in (("adzuna", ("ADZUNA_APP_ID", "ADZUNA_APP_KEY")),
+                        ("jsearch", ("JSEARCH_API_KEY",))):
+        if src.get(_name) and not all(_os.getenv(v) for v in _env):
+            src[_name] = False
+            if console:
+                console.print(
+                    f"[dim]{_name}: skipped, set {' + '.join(_env)} in .env.local to enable[/dim]")
+
     n = cfg.get("max_results_per_query", 20)
     days = cfg.get("posted_within_days", 3)
     country = cfg.get("adzuna_country", "in")
@@ -123,6 +142,35 @@ def run_scrape(cfg: dict, console, progress_callback=None) -> list[SourceResult]
     for token in cfg.get("rippling_boards") or []:
         if src.get("rippling"):
             api_tasks.append((f"rippling:{token}", lambda token=token: fetch_rippling(token)))
+    for token in cfg.get("recruitee_boards") or []:
+        if src.get("recruitee"):
+            api_tasks.append((f"recruitee:{token}", lambda token=token: fetch_recruitee(token, n)))
+    for token in cfg.get("personio_boards") or []:
+        if src.get("personio"):
+            api_tasks.append((f"personio:{token}", lambda token=token: fetch_personio(token, n)))
+    for token in cfg.get("breezy_boards") or []:
+        if src.get("breezy"):
+            api_tasks.append((f"breezy:{token}", lambda token=token: fetch_breezy(token, n)))
+    for token in cfg.get("workable_boards") or []:
+        if src.get("workable"):
+            api_tasks.append((f"workable:{token}", lambda token=token: fetch_workable(token, n)))
+    for token in cfg.get("bamboohr_boards") or []:
+        if src.get("bamboohr"):
+            api_tasks.append((f"bamboohr:{token}", lambda token=token: fetch_bamboohr(token, n)))
+    # Workday needs three parts, so entries are "tenant/dc/site" strings —
+    # e.g. "zoho/wd3/Zoho_Careers". Anything malformed is skipped rather than
+    # sent to fetch_workday with empty components.
+    for entry in cfg.get("workday_tenants") or []:
+        if not src.get("workday"):
+            continue
+        parts = [p for p in str(entry).split("/") if p]
+        if len(parts) != 3:
+            continue
+        tenant, dc, site = parts
+        api_tasks.append((
+            f"workday:{tenant}/{site}",
+            lambda tenant=tenant, dc=dc, site=site: fetch_workday(tenant, dc, site),
+        ))
     for url in cfg.get("jsonld_urls") or []:
         if src.get("jsonld"):
             api_tasks.append((f"jsonld:{url}", lambda url=url: fetch_jsonld(url)))
@@ -131,7 +179,9 @@ def run_scrape(cfg: dict, console, progress_callback=None) -> list[SourceResult]
             api_tasks.append((f"nextdata:{url}", lambda url=url: fetch_nextdata(url)))
     for token in cfg.get("keka_boards") or []:
         if src.get("keka"):
-            browser_tasks.append((f"keka:{token}", lambda token=token: fetch_keka(token, n)))
+            # Was a browser task while fetch_keka drove Playwright; it's a plain
+            # JSON call now, so it belongs in the pooled API stage.
+            api_tasks.append((f"keka:{token}", lambda token=token: fetch_keka(token, n)))
 
     if src.get("watchlist"):
         final_tasks.append((
