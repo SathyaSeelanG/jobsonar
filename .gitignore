@@ -1,0 +1,140 @@
+# ---------------------------------------------------------------------------
+# Secrets — NEVER commit these. Real credentials live in .env.local only.
+# Only .env.example is tracked. See docs/CONFIGURATION.md.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Personal config — your identity, skills and search scope stay on your machine.
+# The tracked *.example.yaml files are the templates you copy from.
+# ---------------------------------------------------------------------------
+config/profile.yaml
+config/profile.local.yaml
+config/search.local.yaml
+config/companies.local.yaml
+
+# ---------------------------------------------------------------------------
+# Data — job history, scan results, exports. All private to you.
+# ---------------------------------------------------------------------------
+data/*
+!data/.gitkeep
+*.db
+*.db-journal
+*.db-journal.bak
+*.sqlite
+*.sqlite3
+
+# Browser auth state captured by Playwright logins
+linkedin_auth.json
+naukri_auth.json
+*_auth.json
+
+# Generated application material (tailored resumes / cover letters)
+applications/
+*.xlsx
+*.docx
+
+# ---------------------------------------------------------------------------
+# Logs & run artifacts
+# ---------------------------------------------------------------------------
+logs/
+*.log
+run_logs/
+json_dumps/
+fetched_jobs/
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Playwright browser downloads
+.playwright/
+ms-playwright/
+
+# ---------------------------------------------------------------------------
+# Node / Tailwind build
+# ---------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+static/css/main.css.bak
+
+# ---------------------------------------------------------------------------
+# Editors & OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# Local agent/assistant settings (machine-specific; .agents/AGENTS.md is tracked)
+# ---------------------------------------------------------------------------
+.claude/
+
+# ---------------------------------------------------------------------------
+# One-off local scripts. These were written for a single run against a single
+# hand-built company list — hardcoded data, mock fallbacks, throwaway checks.
+# They still work locally, they're just not part of the project.
+# ---------------------------------------------------------------------------
+scripts/build_final_table.py
+scripts/combine_and_export.py
+scripts/expand_to_150.py
+scripts/verify_set3.py
+scripts/final_summary.py
+scripts/generate_markdown.py
+scripts/show_results.py
+scripts/fetch_jobs_final.py
+scripts/fetch_jobs_optimized.py
+scripts/run_scraper_fast.py
+scripts/verify_enhancement.py
+scripts/demo_scraper.py
+
+# Editor "duplicate file" copies. These have a habit of holding pasted
+# credentials — the file that triggered this rule had live API keys in it.
+* - Copy.*
+*.Copy.*
+
+# ---------------------------------------------------------------------------
+# Personal research notes & job-lead exports (private output, not source)
+# ---------------------------------------------------------------------------
+Chennai_MERN_Fresher_Job_Leads_*.md
+docs/Chennai_MERN_Fresher_Job_Leads_*.md
+docs/Latest_Jobs_*.md
+docs/Python_Fresher_Jobs_*.md
+docs/chennai_companies*.md
+docs/ENHANCEMENT_SUMMARY.md
+docs/IMPROVEMENT_PLAN.md
+
+# Scratch files
+test_script.js
+scratch/
+tmp/
+*.bak
+*.orig
+*.rej
