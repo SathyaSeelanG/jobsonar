@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Job Agent Pro{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="https://unpkg.com/htmx.org@2.0.8"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <script>
+        tailwind = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['Outfit', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.4s ease both; }
+        .animation-delay-100 { animation-delay: 0.1s; }
+        .animation-delay-200 { animation-delay: 0.2s; }
+        .animation-delay-300 { animation-delay: 0.3s; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen">
+    <main class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <nav class="flex items-center justify-between bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-8 shadow-glass flex-wrap gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center text-xl shadow-lg shadow-brand-500/25">
+                    {% block nav_icon %}⚡{% endblock %}
+                </div>
+                <div>
+                    <h1 class="font-display text-xl font-extrabold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent leading-tight">Job Agent Pro</h1>
+                    <p class="text-slate-500 text-xs font-medium">{% block nav_subtitle %}{% endblock %}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex gap-1 bg-slate-950/60 p-1 rounded-xl border border-white/8">
+                    <a href="/" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 {% if request.endpoint == 'index' %}bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-brand-500/30 shadow-lg{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %}">Job Explorer</a>
+                    <a href="/scan" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 {% if request.endpoint == 'scan_page' %}bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-brand-500/30 shadow-lg{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %}">Live Scanner</a>
+                    <a href="/applied" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 {% if request.endpoint == 'applied_page' %}bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-brand-500/30 shadow-lg{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %}">Applied Jobs</a>
+                </div>
+                {% block nav_actions %}{% endblock %}
+            </div>
+        </nav>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

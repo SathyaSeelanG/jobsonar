@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% block title %}Job Explorer — Job Agent Pro{% endblock %}
+{% block nav_subtitle %}Local intelligence database & ATS tracker{% endblock %}
+{% block content %}
+<div x-data="jobExplorer()" x-init="init()" class="space-y-6">
+    <div class="glass-panel p-4 sm:p-6">
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+            <div class="flex-1 min-w-[200px]">
+                <input type="text" x-model="filters.search" @input.debounce="loadJobs()" placeholder="Search title, company, location..." class="input-field">
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <template x-for="f in activeFilterChips" :key="f.key">
+                    <button @click="resetFilter(f.key)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-400 border border-brand-500/30 hover:bg-brand-500/20 transition-colors">
+                        <span x-text="f.label"></span>
+                        <span class="text-brand-600">&times;</span>
+                    </button>
+                </template>
+                <button x-show="hasActiveFilters" @click="clearAllFilters()" class="text-xs font-semibold text-slate-500 hover:text-slate-300 underline px-2">Clear all</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Location</label>
+                <select x-model="filters.location" @change="loadJobs()" class="select-field">
+                    <option value="all">All Locations</option>
+                    <template x-for="loc in availableFilters.cities" :key="loc">
+                        <option :value="loc" x-text="loc"></option>
+                    </template>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Status</label>
+                <select x-model="filters.status" @change="loadJobs()" class="select-field">
+                    <option value="not_applied">Not Applied / Active</option>
+                    <option value="archived">Archived</option>
+                    <option value="applied">Applied</option>
+                    <template x-for="s in availableFilters.customStatuses" :key="s">
+                        <option :value="s" x-text="s.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></option>
+                    </template>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Level</label>
+                <select x-model="filters.level" @change="loadJobs()" class="select-field">
+                    <option value="all">All Levels</option>
+                    <option value="fresher">Fresher</option>
+                    <option value="junior">Junior</option>
+                    <option value="mid">Mid</option>
+                    <option value="senior">Senior</option>
+                    <option value="lead">Lead</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Posted</label>
+                <select x-model="filters.posted" @change="loadJobs()" class="select-field">
+                    <option value="all">Any Time</option>
+                    <option value="1">Past 24h</option>
+                    <option value="3">Past 3d</option>
+                    <option value="7">Past 7d</option>
+                    <option value="14">Past 14d</option>
+                    <option value="30">Past 30d</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Fetched</label>
+                <select x-model="filters.fetched" @change="loadJobs()" class="select-field">
+                    <option value="all">Any Time</option>
+                    <option value="0">Today</option>
+                    <option value="3">Past 3d</option>
+                    <option value="7">Past 7d</option>
+                    <option value="30">Past 30d</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Apply Type</label>
+                <select x-model="filters.applyType" @change="loadJobs()" class="select-field">
+                    <option value="all">All</option>
+                    <option value="apply_now">Apply Now</option>
+                    <option value="quick_apply">Quick Apply</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Role</label>
+                <select x-model="filters.role" @change="loadJobs()" class="select-field">
+                    <option value="all">All Roles</option>
+                    <option value="python">Python / Django</option>
+                    <option value="react">React / Frontend</option>
+                    <option value="node">Node.js / Backend</option>
+                    <option value="fullstack">MERN / Full Stack</option>
+                    <option value="engineer">Software Engineer</option>
+                    <option value="web">Web Developer</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Source</label>
+                <select x-model="filters.source" @change="loadJobs()" class="select-field">
+                    <option value="all">All Sources</option>
+                    <template x-for="s in availableFilters.sources" :key="s">
+                        <option :value="s" x-text="sourceLabel(s)"></option>
+                    </template>
+                </select>
+            </div>
+        </div>
+
+        <div x-show="hasAdvancedFilters" class="mt-4 pt-4 border-t border-white/8">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Min Score</label>
+                    <input type="number" x-model="filters.minScore" @input.debounce="loadJobs()" min="0" max="100" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Scan</label>
+                    <select x-model="filters.scanId" @change="loadJobs()" class="select-field">
+                        <option value="all">All Scans</option>
+                        {% raw %}<template x-for="scan in availableFilters.scans" :key="scan.id">
+                            <option :value="scan.id">Scan #{{ scan.id }} ({{ scan.started_display or 'Recent' }})</option>
+                        </template>{% endraw %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/80 border border-white/10 font-display font-bold text-sm">
+            <span id="stats-pill" class="text-brand-400">Loading database...</span>
+        </div>
+        <div id="fetch-status" class="text-sm text-slate-500"></div>
+        <div class="ml-auto flex items-center gap-2">
+            <div class="relative" x-data="{ open: false }">
+                <button @click="open = !open" @click.away="open = false" class="btn btn-ghost text-xs">
+                    Manage Jobs
+                </button>
+                <div x-show="open" x-transition class="absolute right-0 mt-2 w-64 glass-panel p-3 z-20 space-y-2">
+                    <div class="flex gap-2">
+                        <select x-model="clearOlderThan" class="select-field text-xs flex-1">
+                            <option value="1">1+ days</option>
+                            <option value="7">7+ days</option>
+                            <option value="14">14+ days</option>
+                            <option value="30" selected>30+ days</option>
+                            <option value="60">60+ days</option>
+                        </select>
+                        <button @click="clearOld()" class="btn btn-danger text-xs">Clear Old</button>
+                    </div>
+                    <button @click="recheckApplyTypes()" class="btn btn-primary w-full justify-center text-xs">Re-check Apply Types</button>
+                    <button @click="clearNonFresher()" class="btn btn-warning w-full justify-center text-xs">Clear Non-Fresher</button>
+                    <button @click="clearAll()" class="btn btn-danger w-full justify-center text-xs">Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="jobs-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div class="col-span-full text-center py-20 text-slate-500">
+            <div class="text-4xl mb-3">📭</div>
+            <p class="font-display font-bold text-slate-300">No matching jobs found</p>
+            <p class="text-sm mt-1">Try loosening filters or run a new scan from the Live Scanner tab.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function jobExplorer() {
+    return {
+        jobs: [],
+        filters: {
+            search: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).search : '',
+            status: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).status : 'not_applied',
+            level: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).level : 'all',
+            posted: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).posted : 'all',
+            fetched: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).fetched : 'all',
+            location: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).location : 'all',
+            role: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).role : 'all',
+            source: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).source : 'all',
+            scanId: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).scanId : 'all',
+            applyType: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).applyType : 'all',
+            minScore: localStorage.getItem('ja_filters') ? JSON.parse(localStorage.getItem('ja_filters')).minScore || 0 : 0,
+        },
+        availableFilters: { cities: [], sources: [], customStatuses: [], scans: [] },
+        clearOlderThan: 30,
+        get hasActiveFilters() {
+            const defaults = { search:'', status:'not_applied', level:'all', posted:'all', fetched:'all', location:'all', role:'all', source:'all', scanId:'all', applyType:'all', minScore:0 };
+            return Object.keys(this.filters).some(k => String(this.filters[k]) !== String(defaults[k]));
+        },
+        get activeFilterChips() {
+            const labels = { search: s => `Search: "${s}"`, status: s => `Status: ${s.replace(/_/g,' ')}`, level: s => `Level: ${s}`, posted: s => `Posted: ${s}d`, fetched: s => `Fetched: ${s}d`, location: s => `Location: ${s}`, role: s => `Role: ${s}`, source: s => `Source: ${this.sourceLabel(s)}`, scanId: s => `Scan: ${s}`, applyType: s => `Type: ${s}`, minScore: s => `Score: ${s}` };
+            const defaults = { search:'', status:'not_applied', level:'all', posted:'all', fetched:'all', location:'all', role:'all', source:'all', scanId:'all', applyType:'all', minScore:0 };
+            return Object.keys(this.filters).filter(k => String(this.filters[k]) !== String(defaults[k])).map(k => ({ key: k, label: labels[k](this.filters[k]) }));
+        },
+        get hasAdvancedFilters() {
+            return this.filters.minScore > 0 || this.filters.scanId !== 'all';
+        },
+        init() {
+            this.loadJobs();
+        },
+        sourceLabel(s) {
+            const map = { simplyhired:'SimplyHired', linkedin:'LinkedIn', naukri:'Naukri', adzuna:'Adzuna', jsearch:'JSearch', greenhouse:'Greenhouse', lever:'Lever', ashby:'Ashby', timesjobs:'TimesJobs', watchlist:'Watchlist / Career Portal', keka:'Keka ATS', smartrecruiters:'SmartRecruiters', rippling:'Rippling', jsonld:'JSON-LD', nextdata:'Next.js' };
+            return map[s] || s.charAt(0).toUpperCase() + s.slice(1);
+        },
+        saveFilters() {
+            localStorage.setItem('ja_filters', JSON.stringify(this.filters));
+        },
+        async loadJobs() {
+            this.saveFilters();
+            const params = new URLSearchParams();
+            Object.entries(this.filters).forEach(([k,v]) => { if (v && v !== 'all' && v !== 0) params.set(k, v); });
+            const r = await fetch('/api/jobs?' + params.toString());
+            const data = await r.json();
+            this.availableFilters.cities = data.cities || [];
+            this.availableFilters.sources = data.sources || [];
+            this.availableFilters.customStatuses = data.statuses ? data.statuses.filter(s => !['shortlisted','new','tailored','applied','archived','not_interested','skipped','stale'].includes(s)) : [];
+            this.availableFilters.scans = data.scans || [];
+            const grid = document.getElementById('jobs-grid');
+            document.getElementById('stats-pill').textContent = `${data.filtered || 0} of ${data.total || 0} jobs surfaced`;
+            document.getElementById('fetch-status').innerHTML = data.fetch && data.fetch.running ? '⚡ Background crawler is active — <a href="/scan" class="text-cyan-400 hover:underline font-bold">View Live Progress &rarr;</a>' : data.fetch && data.fetch.finished_at ? `Last scan finished — ${data.fetch.unique} unique, ${data.fetch.new} new jobs.` : '';
+            if (!data.jobs || !data.jobs.length) {
+                grid.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500"><div class="text-4xl mb-3">📭</div><p class="font-display font-bold text-slate-300">No matching jobs found</p><p class="text-sm mt-1">Try loosening filters or run a new scan.</p></div>';
+                return;
+            }
+            grid.innerHTML = data.jobs.map((job, idx) => {
+                const status = job.status || 'new';
+                const level = (job.experience_level || '').toLowerCase();
+                const scoreReason = job.score_reason ? ` title="${job.score_reason.replace(/"/g, '&quot;')}"` : '';
+                const descId = `desc-${idx}`;
+                const description = job.description ? `<div class="job-desc line-clamp-3 text-sm text-slate-300 mt-3" id="${descId}">${escapeHtml(job.description)}</div><button type="button" @click="toggleDesc('${descId}', this)" class="text-cyan-400 text-xs font-bold hover:underline mt-1">Show more</button>` : '';
+                const notes = job.notes ? `<div class="bg-amber-500/8 border border-amber-500/20 rounded-lg p-2.5 text-xs text-amber-400 mt-2">📝 ${escapeHtml(job.notes)}</div>` : '';
+                const applyTypeBadge = (job.source || '').toLowerCase() === 'simplyhired' || (job.url || '').toLowerCase().includes('simplyhired')
+                    ? (job.apply_type === 'quick_apply' ? '<span class="badge badge-rose">⚡ Quick Apply</span>' : '<span class="badge badge-slate">↗ Apply Now</span>')
+                    : '';
+                const isSimplyHired = (job.source || '').toLowerCase() === 'simplyhired' || (job.url || '').toLowerCase().includes('simplyhired');
+                const applyBadge = job.apply_type === 'quick_apply' ? '<span class="badge badge-rose">⚡ Quick Apply</span>' : '<span class="badge badge-slate">↗ Apply Now</span>';
+
+                return `<article class="job-card animate-fade-in-up" style="animation-delay: ${Math.min(idx * 30, 300)}ms">
+                    <div class="space-y-2">
+                        <h3 class="text-base font-bold text-white leading-snug break-words">${escapeHtml(job.title)}</h3>
+                        <p class="text-sm font-semibold text-cyan-400">${escapeHtml(job.company || 'Unknown Company')}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="badge ${statusBadgeClass(status)}">${escapeHtml(status.replace(/_/g, ' '))}</span>
+                        <span class="badge badge-emerald"${scoreReason}>Score ${Number(job.score || 0)}</span>
+                        ${applyBadge}
+                        ${level ? `<span class="badge ${levelBadgeClass(level)}">${escapeHtml(level)}</span>` : ''}
+                    </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                        <span>📍 ${escapeHtml(job.location || 'N/A')}</span>
+                        ${job.posted ? `<span>🕒 ${escapeHtml(job.posted)}</span>` : ''}
+                        ${job.fetched_display ? `<span>📥 ${escapeHtml(job.fetched_display)}</span>` : ''}
+                        ${job.salary ? `<span>💰 ${escapeHtml(job.salary)}</span>` : ''}
+                    </div>
+                    ${description}
+                    ${notes}
+                    <div class="flex items-center justify-between pt-3 border-t border-white/6 gap-2 flex-wrap">
+                        <span class="text-xs text-slate-600 capitalize">${escapeHtml(job.source || 'unknown')}</span>
+                        <div class="flex gap-2 flex-wrap">
+                            ${job.status !== 'applied' ? `<button @click="markApplied('${job.id}', this)" class="btn btn-primary !py-1.5 !px-3 !text-xs">Mark Applied</button>` : ''}
+                            ${job.status !== 'archived' ? `<button @click="markArchived('${job.id}', this)" class="btn btn-warning !py-1.5 !px-3 !text-xs">Archive</button>` : ''}
+                            <button @click="markNotInterested('${job.id}', this)" class="btn btn-ghost !py-1.5 !px-3 !text-xs">Ignore</button>
+                            <button @click="deleteJob('${job.id}', this)" class="btn btn-danger !py-1.5 !px-3 !text-xs">Delete</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs">
+                        ${job.company_careers_url && job.company_careers_url !== job.url ? `<a href="${escapeHtml(job.company_careers_url)}" target="_blank" rel="noopener" class="text-slate-500 hover:text-slate-300 font-medium transition-colors">Careers ↗</a>` : ''}
+                        ${job.url ? `<a href="${escapeHtml(job.url)}" target="_blank" rel="noopener" class="text-brand-400 hover:text-brand-300 font-bold transition-colors">Open Posting →</a>` : ''}
+                    </div>
+                </article>`;
+            }).join('');
+        },
+        toggleDesc(id, btn) {
+            const el = document.getElementById(id);
+            el.classList.toggle('line-clamp-none');
+            const expanded = el.classList.contains('line-clamp-none');
+            btn.textContent = expanded ? 'Show less' : 'Show more';
+        },
+        async markApplied(id, btn) {
+            btn.disabled = true; btn.textContent = 'Saving...';
+            const r = await fetch('/api/jobs/' + id + '/apply', { method: 'POST' });
+            const d = await r.json();
+            if (d.error) { alert(d.error); btn.disabled = false; btn.textContent = 'Applied'; }
+            else this.loadJobs();
+        },
+        async markArchived(id, btn) {
+            btn.disabled = true; btn.textContent = 'Archiving...';
+            const r = await fetch('/api/jobs/' + id + '/archive', { method: 'POST' });
+            const d = await r.json();
+            if (d.error) { alert(d.error); btn.disabled = false; btn.textContent = 'Archive'; }
+            else this.loadJobs();
+        },
+        async markNotInterested(id, btn) {
+            btn.disabled = true; btn.textContent = 'Saving...';
+            const r = await fetch('/api/jobs/' + id + '/not_interested', { method: 'POST' });
+            const d = await r.json();
+            if (d.error) { alert(d.error); btn.disabled = false; btn.textContent = 'Ignore'; }
+            else this.loadJobs();
+        },
+        async deleteJob(id, btn) {
+            if (!confirm('Remove this job permanently?')) return;
+            btn.disabled = true; btn.textContent = 'Deleting...';
+            const r = await fetch('/api/jobs/' + id + '/delete', { method: 'POST' });
+            const d = await r.json();
+            if (d.error) { alert(d.error); btn.disabled = false; btn.textContent = 'Delete'; }
+            else this.loadJobs();
+        },
+        async clearOld() {
+            const r = await fetch('/api/jobs/clear', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ older_than_days: this.clearOlderThan }) });
+            const d = await r.json();
+            if (d.deleted) { this.loadJobs(); }
+        },
+        async clearNonFresher() {
+            const r = await fetch('/api/jobs/clear_non_fresher', { method: 'POST' });
+            const d = await r.json();
+            if (d.deleted) { this.loadJobs(); }
+        },
+        async clearAll() {
+            if (!confirm('Delete all non-applied jobs?')) return;
+            const r = await fetch('/api/jobs/clear_all', { method: 'POST' });
+            const d = await r.json();
+            if (d.deleted) { this.loadJobs(); }
+        },
+        async recheckApplyTypes() {
+            const r = await fetch('/api/jobs/recheck_apply_types', { method: 'POST' });
+            const d = await r.json();
+            if (d.ok) { alert(`Recheck complete: ${d.updated_quick} Quick Apply, ${d.updated_apply_now} Apply Now.`); this.loadJobs(); }
+        },
+        resetFilter(key) {
+            const defaults = { search:'', status:'not_applied', level:'all', posted:'all', fetched:'all', location:'all', role:'all', source:'all', scanId:'all', applyType:'all', minScore:0 };
+            this.filters[key] = defaults[key];
+            this.loadJobs();
+        },
+        clearAllFilters() {
+            this.filters = { search:'', status:'not_applied', level:'all', posted:'all', fetched:'all', location:'all', role:'all', source:'all', scanId:'all', applyType:'all', minScore:0 };
+            this.loadJobs();
+        }
+    }
+}
+
+function levelBadgeClass(level) {
+    const map = { fresher: 'badge-cyan', junior: 'badge-blue', mid: 'badge-amber', senior: 'badge-rose', lead: 'badge-rose' };
+    return map[level] || 'badge-slate';
+}
+
+function statusBadgeClass(status) {
+    const map = { shortlisted: 'badge-emerald', new: 'badge-amber', tailored: 'badge-violet', applied: 'badge-violet', archived: 'badge-amber', not_interested: 'badge-rose', skipped: 'badge-slate', stale: 'badge-slate', not_applied: 'badge-slate' };
+    return map[status] || 'badge-slate';
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

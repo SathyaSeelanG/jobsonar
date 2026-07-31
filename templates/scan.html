@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+{% block title %}Live Job Scanner — Job Agent Pro{% endblock %}
+{% block nav_icon %}⚡{% endblock %}
+{% block nav_subtitle %}Live Background Scanner & Career Monitor{% endblock %}
+{% block nav_actions %}
+<a href="/" class="btn btn-ghost text-xs">← Back to Explorer</a>
+{% endblock %}
+{% block content %}
+<div x-data="liveScanner()" x-init="init()" class="space-y-6">
+    <div class="glass-panel p-5 sm:p-6">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h2 class="font-display text-lg font-bold text-white">Select Scan Mode</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Configure background crawler behavior</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+            <template x-for="mode in modes" :key="mode.value">
+                <label @click="currentMode = mode.value" class="cursor-pointer rounded-xl border p-4 transition-all duration-200" :class="currentMode === mode.value ? 'border-brand-500 bg-brand-500/10 shadow-lg shadow-brand-500/15' : 'border-white/10 bg-slate-900/40 hover:border-white/20'">
+                    <input type="radio" x-model="currentMode" :value="mode.value" class="hidden">
+                    <div class="font-display font-bold text-sm text-white mb-1" x-text="mode.title"></div>
+                    <div class="text-xs text-slate-500 leading-relaxed" x-text="mode.desc"></div>
+                </label>
+            </template>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-5">
+            <div class="filter-panel">
+                <div class="filter-panel-header">
+                    <h3 class="filter-panel-title">Target Sources</h3>
+                    <span class="filter-count-badge" x-text="allSourcesSelected ? 'All' : selectedSources.length + ' selected'"></span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <label @click="toggleAllSources()" class="source-chip" :class="allSourcesSelected ? 'active' : ''">
+                        <input type="checkbox" :checked="allSourcesSelected" class="hidden">
+                        <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>🌐 All Active</span>
+                    </label>
+                    <template x-for="src in availableSources" :key="src.value">
+                        <label @click="toggleSource(src.value)" class="source-chip" :class="selectedSources.includes(src.value) ? 'active' : ''">
+                            <input type="checkbox" :checked="selectedSources.includes(src.value)" class="hidden">
+                            <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span x-text="src.label"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <div class="filter-panel-header">
+                    <h3 class="filter-panel-title">Location <span class="filter-panel-hint">(All = every location)</span></h3>
+                    <span class="filter-count-badge" x-text="selectedLocations.includes('all') ? 'All' : selectedLocations.length + ' selected'"></span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <label @click="toggleFilterOption('selectedLocations', 'all')" class="source-chip" :class="selectedLocations.includes('all') ? 'active' : ''">
+                        <input type="checkbox" :checked="selectedLocations.includes('all')" class="hidden">
+                        <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>🌍 All Locations</span>
+                    </label>
+                    <template x-for="loc in locationOptions" :key="loc">
+                        <label @click="toggleFilterOption('selectedLocations', loc)" class="source-chip" :class="selectedLocations.includes(loc) ? 'active' : ''">
+                            <input type="checkbox" :checked="selectedLocations.includes(loc)" class="hidden">
+                            <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span x-text="loc"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <div class="filter-panel-header">
+                    <h3 class="filter-panel-title">Role / Query <span class="filter-panel-hint">(All = every configured search)</span></h3>
+                    <span class="filter-count-badge" x-text="selectedQueries.includes('all') ? 'All' : selectedQueries.length + ' selected'"></span>
+                </div>
+                <input type="text" x-model="queryFilterText" placeholder="Search roles…" class="input-field text-xs py-1.5 mb-2">
+                <div class="filter-chip-scroll">
+                    <label @click="toggleFilterOption('selectedQueries', 'all')" class="source-chip" :class="selectedQueries.includes('all') ? 'active' : ''">
+                        <input type="checkbox" :checked="selectedQueries.includes('all')" class="hidden">
+                        <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>🎯 All Roles</span>
+                    </label>
+                    <template x-for="q in filteredQueryOptions" :key="q">
+                        <label @click="toggleFilterOption('selectedQueries', q)" class="source-chip" :class="selectedQueries.includes(q) ? 'active' : ''">
+                            <input type="checkbox" :checked="selectedQueries.includes(q)" class="hidden">
+                            <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span x-text="q"></span>
+                        </label>
+                    </template>
+                    <div x-show="!filteredQueryOptions.length" class="text-xs text-slate-600 py-2">No roles match "<span x-text="queryFilterText"></span>"</div>
+                </div>
+            </div>
+
+            <div class="filter-panel">
+                <div class="filter-panel-header">
+                    <h3 class="filter-panel-title">Experience Level <span class="filter-panel-hint">(All = skip level filtering)</span></h3>
+                    <span class="filter-count-badge" x-text="selectedExperience.includes('all') ? 'All' : selectedExperience.length + ' selected'"></span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <label @click="toggleFilterOption('selectedExperience', 'all')" class="source-chip" :class="selectedExperience.includes('all') ? 'active' : ''">
+                        <input type="checkbox" :checked="selectedExperience.includes('all')" class="hidden">
+                        <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>♾️ All Levels</span>
+                    </label>
+                    <template x-for="lvl in experienceOptions" :key="lvl">
+                        <label @click="toggleFilterOption('selectedExperience', lvl)" class="source-chip" :class="selectedExperience.includes(lvl) ? 'active' : ''">
+                            <input type="checkbox" :checked="selectedExperience.includes(lvl)" class="hidden">
+                            <svg class="chip-check w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span x-text="lvl" class="capitalize"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between pt-5 border-t border-white/8 gap-4">
+            <div class="flex flex-wrap items-center gap-5">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" x-model="useLlm" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-800 peer-checked:bg-brand-600 rounded-full transition-colors"></div>
+                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-300">AI LLM Scoring</span>
+                </label>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Freshness:</span>
+                    <select x-model="postedFreshness" class="select-field text-xs py-1.5">
+                        <option value="1">Past 24h</option>
+                        <option value="3" selected>Past 3d</option>
+                        <option value="7">Past 7d</option>
+                        <option value="14">Past 14d</option>
+                        <option value="30">Past 30d</option>
+                        <option value="all">Any Time</option>
+                    </select>
+                </div>
+            </div>
+            <button @click="triggerScan()" :disabled="scanRunning" class="btn btn-primary !px-6 !py-3 text-sm">
+                <span x-show="!scanRunning">⚡ Start Live Scan</span>
+                <span x-show="scanRunning" class="inline-flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Scanning...
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <div x-show="scanRunning || lastFetch" class="glass-panel p-5 sm:p-6">
+        <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 text-xs font-bold">
+                <span x-text="scanRunning ? '🚀 ' + (fetchState.stage || 'Running...') : fetchState.finished_at ? '✅ Scan Complete' : '⏳ Idle'"></span>
+            </span>
+            <span class="font-display font-extrabold text-brand-400 text-sm" x-text="(fetchState.progress_percent || 0) + '%'"></span>
+        </div>
+        <div class="w-full h-3 bg-slate-800/80 rounded-full overflow-hidden border border-white/5 mb-5">
+            <div class="h-full bg-gradient-to-r from-brand-600 to-cyan-500 rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" :style="`width: ${fetchState.progress_percent || 0}%`"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-slate-900/60 border border-white/6 rounded-xl p-4 text-center">
+                <div class="font-display text-2xl font-extrabold text-white" x-text="fetchState.tasks_completed || 0"></div>
+                <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mt-1">Tasks</div>
+            </div>
+            <div class="bg-slate-900/60 border border-white/6 rounded-xl p-4 text-center">
+                <div class="font-display text-2xl font-extrabold text-white" x-text="fetchState.fetched || 0"></div>
+                <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mt-1">Raw Found</div>
+            </div>
+            <div class="bg-slate-900/60 border border-white/6 rounded-xl p-4 text-center">
+                <div class="font-display text-2xl font-extrabold text-white" x-text="fetchState.unique || 0"></div>
+                <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mt-1">Unique</div>
+            </div>
+            <div class="bg-slate-900/60 border border-white/6 rounded-xl p-4 text-center">
+                <div class="font-display text-2xl font-extrabold text-brand-400" x-text="fetchState.new || 0"></div>
+                <div class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mt-1">New Stored</div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="fetchState.logs && fetchState.logs.length" class="glass-panel overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 bg-slate-900/90 border-b border-white/8">
+            <div class="flex items-center gap-2">
+                <div class="flex gap-1.5">
+                    <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-brand-500"></div>
+                </div>
+                <span class="text-xs font-semibold text-slate-500 font-mono ml-2">live_crawler.log</span>
+            </div>
+            <button @click="clearLogs()" class="text-[11px] font-semibold text-slate-600 hover:text-slate-400 border border-white/10 rounded-md px-2 py-1 transition-colors">Clear</button>
+        </div>
+        <div id="terminal-body" class="p-4 h-72 overflow-y-auto font-mono text-xs leading-relaxed space-y-1">
+            <template x-for="(log, i) in fetchState.logs" :key="i">
+                <div class="flex gap-3">
+                    <span class="text-slate-600 shrink-0" x-text="'[' + (log.time || '--:--:--') + ']'"></span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase shrink-0" :class="logBadgeClass(log.level)" x-text="log.level || 'info'"></span>
+                    <span class="text-slate-300 break-all" x-text="log.msg"></span>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-display text-lg font-bold text-white">Live Discovered Jobs <span class="text-slate-500 text-sm font-normal">(<span x-text="liveJobsCount"></span>)</span></h2>
+            <select x-model="sourceFilter" @change="renderLiveJobs()" class="select-field text-xs py-1.5 w-auto">
+                <option value="all">All Sources</option>
+                <option value="simplyhired">SimplyHired</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="naukri">Naukri</option>
+                <option value="adzuna">Adzuna</option>
+                <option value="jsearch">JSearch</option>
+                <option value="greenhouse">Greenhouse</option>
+                <option value="lever">Lever</option>
+                <option value="ashby">Ashby</option>
+                <option value="timesjobs">TimesJobs</option>
+                <option value="watchlist">Watchlist / Career Portal</option>
+            </select>
+        </div>
+        <div id="scanned-jobs-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div class="col-span-full text-center py-16 text-slate-500">
+                <div class="text-4xl mb-3">🔍</div>
+                <p class="font-display font-bold text-slate-300">No jobs discovered yet in this session</p>
+                <p class="text-sm mt-1">Start a scan above to watch live postings stream in.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <h2 class="font-display text-lg font-bold text-white">📜 Scan History</h2>
+            <div class="flex flex-wrap gap-2">
+                <select x-model="historyModeFilter" @change="loadHistory()" class="select-field text-xs py-1.5">
+                    <option value="all">All Modes</option>
+                    <option value="full">Full Pipeline</option>
+                    <option value="fast">Fast Scan</option>
+                    <option value="watchlist">Watchlist</option>
+                    <option value="apis">APIs Only</option>
+                </select>
+                <select x-model="historyStatusFilter" @change="loadHistory()" class="select-field text-xs py-1.5">
+                    <option value="all">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                    <option value="running">Running</option>
+                </select>
+                <button @click="loadHistory()" class="btn btn-ghost text-xs">Refresh</button>
+                <button @click="if(confirm('Clear all scan history?')) clearHistory()" class="btn btn-danger text-xs">Clear History</button>
+            </div>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-white/8">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="bg-slate-900/90 text-slate-400 text-xs uppercase tracking-wider">
+                        <th class="px-4 py-3 font-semibold border-b border-white/8">Scan ID</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8">Mode</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8">Started</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8">Status</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8 text-center">Raw</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8 text-center">Unique</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8 text-center">New</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8 text-center">Docs</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8">Duration</th>
+                        <th class="px-4 py-3 font-semibold border-b border-white/8"></th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <tr><td colspan="10" class="text-center py-8 text-slate-600">Loading scan history...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity style="display: none;">
+    <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm" @click="modalOpen = false"></div>
+    <div class="relative glass-panel w-full max-w-5xl max-h-[90vh] flex flex-col shadow-glass-lg">
+        <div class="flex items-center justify-between p-5 border-b border-white/8">
+            <div>
+                <h3 class="font-display text-lg font-bold text-white">Newly Added Jobs — Scan #<span x-text="modalScanId"></span></h3>
+                <p class="text-xs text-slate-500 mt-0.5">Jobs added to the database during this scan</p>
+            </div>
+            <button @click="modalOpen = false" class="w-8 h-8 rounded-full bg-white/8 border border-white/10 text-slate-400 hover:text-white hover:bg-white/15 flex items-center justify-center transition-colors">&times;</button>
+        </div>
+        <div class="p-5 overflow-y-auto">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <input type="text" x-model="modalSearch" placeholder="Search newly added jobs..." class="input-field w-full max-w-xs">
+                <span class="text-xs font-bold text-brand-400" x-text="(modalFilteredJobs || []).length + ' jobs'"></span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <template x-for="job in modalFilteredJobs" :key="job.id">
+                    <div class="job-card !p-4">
+                        <h4 class="text-sm font-bold text-white mb-1" x-text="job.title"></h4>
+                        <p class="text-xs font-semibold text-cyan-400 mb-2" x-text="job.company"></p>
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            <span class="badge" x-text="job.location"></span>
+                            <span class="badge badge-emerald" x-text="'Score ' + job.score"></span>
+                        </div>
+                        <a :href="job.url" target="_blank" rel="noopener" class="text-xs font-bold text-brand-400 hover:text-brand-300 transition-colors">Open Posting →</a>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function liveScanner() {
+    return {
+        currentMode: 'full',
+        selectedSources: ['all'],
+        allSourcesSelected: true,
+        useLlm: false,
+        postedFreshness: '3',
+        locationOptions: [],
+        queryOptions: [],
+        experienceOptions: ['fresher', 'junior', 'mid', 'senior', 'lead'],
+        selectedLocations: ['all'],
+        selectedQueries: ['all'],
+        selectedExperience: ['fresher', 'junior'],
+        queryFilterText: '',
+        scanRunning: false,
+        pollTimer: null,
+        lastLogCount: 0,
+        fetchState: { running: false, logs: [], progress_percent: 0, stage: '', fetched: 0, unique: 0, new: 0, tasks_completed: 0, tasks_total: 0, current_scanned_jobs: [] },
+        modes: [
+            { value: 'full', title: '🚀 Full Pipeline Scan', desc: 'Scrapes all active API feeds, web scrapers, and company career pages.' },
+            { value: 'fast', title: '⚡ Fast Target Scan', desc: 'Quick 15-second check using high-priority endpoints.' },
+            { value: 'watchlist', title: '🏢 Watchlist Career Pages', desc: 'Crawls your companies.yaml career portals.' },
+            { value: 'apis', title: '🔌 Free APIs Only', desc: 'Instant checks against Adzuna, JSearch, Arbeitnow, Remotive, RemoteOK.' }
+        ],
+        availableSources: [
+            { value: 'naukri', label: 'Naukri' },
+            { value: 'linkedin', label: 'LinkedIn' },
+            { value: 'simplyhired', label: 'SimplyHired' },
+            { value: 'watchlist', label: 'Watchlist / Career Portals' },
+            { value: 'adzuna', label: 'Adzuna' },
+            { value: 'jsearch', label: 'JSearch' },
+            { value: 'greenhouse', label: 'Greenhouse ATS' },
+            { value: 'lever', label: 'Lever ATS' },
+            { value: 'ashby', label: 'Ashby ATS' },
+            { value: 'timesjobs', label: 'TimesJobs' }
+        ],
+        sourceFilter: 'all',
+        liveJobsCount: 0,
+        historyModeFilter: 'all',
+        historyStatusFilter: 'all',
+        modalOpen: false,
+        modalScanId: null,
+        modalJobs: [],
+        modalSearch: '',
+
+        init() {
+            this.loadHistory();
+            this.loadScanOptions();
+            this.startPolling();
+        },
+
+        async loadScanOptions() {
+            try {
+                const r = await fetch('/api/scan_options');
+                const d = await r.json();
+                this.locationOptions = d.locations || [];
+                this.queryOptions = d.queries || [];
+                if (d.experience_levels && d.experience_levels.length) this.experienceOptions = d.experience_levels;
+            } catch (e) { console.error(e); }
+        },
+
+        toggleFilterOption(listName, val) {
+            let list = this[listName];
+            if (val === 'all') {
+                this[listName] = ['all'];
+                return;
+            }
+            list = list.filter(v => v !== 'all');
+            if (list.includes(val)) {
+                list = list.filter(v => v !== val);
+                if (!list.length) list = ['all'];
+            } else {
+                list.push(val);
+            }
+            this[listName] = list;
+        },
+
+        get filteredQueryOptions() {
+            if (!this.queryFilterText.trim()) return this.queryOptions;
+            const q = this.queryFilterText.trim().toLowerCase();
+            return this.queryOptions.filter(o => o.toLowerCase().includes(q));
+        },
+
+        get modalFilteredJobs() {
+            if (!this.modalSearch) return this.modalJobs;
+            const q = this.modalSearch.toLowerCase();
+            return this.modalJobs.filter(j => (j.title + ' ' + j.company + ' ' + j.location).toLowerCase().includes(q));
+        },
+
+        toggleSource(val) {
+            if (val === 'all') {
+                this.selectedSources = ['all'];
+            } else {
+                this.selectedSources = this.selectedSources.filter(s => s !== 'all');
+                if (this.selectedSources.includes(val)) {
+                    this.selectedSources = this.selectedSources.filter(s => s !== val);
+                    if (!this.selectedSources.length) this.selectedSources = ['all'];
+                } else {
+                    this.selectedSources.push(val);
+                }
+            }
+            this.allSourcesSelected = this.selectedSources.includes('all');
+        },
+
+        toggleAllSources() {
+            this.selectedSources = ['all'];
+            this.allSourcesSelected = true;
+        },
+
+        async triggerScan() {
+            this.scanRunning = true;
+            this.lastLogCount = 0;
+            const body = {
+                mode: this.currentMode,
+                sources: this.selectedSources,
+                posted_freshness: this.postedFreshness,
+                locations: this.selectedLocations,
+                queries: this.selectedQueries,
+                experience_levels: this.selectedExperience,
+            };
+            if (this.useLlm) body.use_llm = true;
+            try {
+                const r = await fetch('/api/fetch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const d = await r.json();
+                this.fetchState = d.fetch || this.fetchState;
+                if (!this.pollTimer) this.startPolling();
+                this.loadHistory();
+            } catch (e) {
+                console.error(e);
+                this.scanRunning = false;
+            }
+        },
+
+        startPolling() {
+            if (this.pollTimer) clearInterval(this.pollTimer);
+            this.pollTimer = setInterval(async () => {
+                try {
+                    const r = await fetch('/api/fetch');
+                    const d = await r.json();
+                    this.fetchState = d.fetch || this.fetchState;
+                    this.renderLiveJobs();
+                    if (!this.fetchState.running) {
+                        clearInterval(this.pollTimer);
+                        this.pollTimer = null;
+                        this.scanRunning = false;
+                        this.loadHistory();
+                    }
+                } catch (e) { console.error(e); }
+            }, 1000);
+        },
+
+        renderLiveJobs() {
+            const jobs = this.fetchState.current_scanned_jobs || [];
+            let filtered = jobs;
+            if (this.sourceFilter !== 'all') filtered = jobs.filter(j => (j.source || '').toLowerCase() === this.sourceFilter);
+            this.liveJobsCount = filtered.length;
+            const grid = document.getElementById('scanned-jobs-grid');
+            if (!filtered.length) {
+                grid.innerHTML = '<div class="col-span-full text-center py-16 text-slate-500"><div class="text-4xl mb-3">🔍</div><p class="font-display font-bold text-slate-300">No jobs discovered yet</p><p class="text-sm mt-1">Start a scan to watch live postings stream in.</p></div>';
+                return;
+            }
+            grid.innerHTML = filtered.map((job, idx) => {
+                const level = (job.experience_level || '').toLowerCase();
+                return `<div class="job-card animate-fade-in-up" style="animation-delay: ${Math.min(idx * 20, 200)}ms">
+                    <h3 class="text-sm font-bold text-white">${escapeHtml(job.title)}</h3>
+                    <p class="text-xs font-semibold text-cyan-400">${escapeHtml(job.company || 'Unknown')}</p>
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+                        <span class="badge badge-slate">${escapeHtml(job.location || 'N/A')}</span>
+                        <span class="badge badge-emerald">Score ${Number(job.score || 0)}</span>
+                        ${level ? `<span class="badge ${levelBadgeClass(level)}">${escapeHtml(level)}</span>` : ''}
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-white/6 mt-3">
+                        <span class="text-[11px] text-slate-600 capitalize">${escapeHtml(job.source || 'unknown')}</span>
+                        <div class="flex gap-2">
+                            ${job.status !== 'applied' ? `<button @click="markApplied('${job.id}', this)" class="btn !py-1 !px-2.5 !text-[11px] btn-primary">Apply</button>` : ''}
+                            <a :href="'${escapeHtml(job.url)}'" target="_blank" rel="noopener" class="text-[11px] font-bold text-brand-400 hover:text-brand-300">Open →</a>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        },
+
+        async loadHistory() {
+            const params = new URLSearchParams({ mode: this.historyModeFilter, status: this.historyStatusFilter, limit: '50' });
+            const r = await fetch('/api/scans?' + params.toString());
+            const d = await r.json();
+            const tbody = document.getElementById('history-table-body');
+            if (!d.scans || !d.scans.length) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-slate-600">No scan history yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = d.scans.map(s => `<tr class="border-b border-white/5 hover:bg-slate-800/40 transition-colors">
+                <td class="px-4 py-3 font-mono text-xs text-slate-400">#${s.id}</td>
+                <td class="px-4 py-3"><span class="badge" style="background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3)">${escapeHtml(s.mode)}</span></td>
+                <td class="px-4 py-3 text-xs text-slate-500">${escapeHtml(s.started_display || s.started_at || '')}</td>
+                <td class="px-4 py-3"><span class="badge ${s.status === 'completed' ? 'badge-emerald' : s.status === 'failed' ? 'badge-rose' : 'badge-amber'}">${escapeHtml(s.status || 'unknown')}</span></td>
+                <td class="px-4 py-3 text-center text-xs text-slate-400">${s.fetched_count || 0}</td>
+                <td class="px-4 py-3 text-center text-xs text-slate-400">${s.unique_count || 0}</td>
+                <td class="px-4 py-3 text-center text-xs font-bold text-brand-400">${s.new_count || 0}</td>
+                <td class="px-4 py-3 text-center">
+                    <button @click="openScanJobs(${s.id})" class="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors">View</button>
+                </td>
+                <td class="px-4 py-3 text-xs text-slate-500">${s.duration_seconds ? s.duration_seconds + 's' : '-'}</td>
+                <td class="px-4 py-3">
+                    <button @click="if(confirm('Delete scan #${s.id}?')) deleteScan(${s.id})" class="text-rose-400 hover:text-rose-300 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </td>
+            </tr>`).join('');
+        },
+
+        async openScanJobs(scanId) {
+            this.modalScanId = scanId;
+            this.modalSearch = '';
+            this.modalOpen = true;
+            const r = await fetch('/api/scans/' + scanId + '/jobs');
+            const d = await r.json();
+            this.modalJobs = d.jobs || [];
+        },
+
+        async deleteScan(scanId) {
+            await fetch(`/api/scans/${scanId}`, { method: 'DELETE' });
+            this.loadHistory();
+        },
+
+        async clearHistory() {
+            await fetch('/api/scans/clear_history', { method: 'POST' });
+            this.loadHistory();
+        },
+
+        clearLogs() {
+            this.fetchState.logs = [];
+        },
+
+        logBadgeClass(level) {
+            const map = { success: 'badge-success', error: 'badge-error', stage: 'badge-stage', info: 'badge-info' };
+            return map[level] || 'badge-info';
+        }
+    }
+}
+
+function levelBadgeClass(level) {
+    const map = { fresher: 'badge-cyan', junior: 'badge-blue', mid: 'badge-amber', senior: 'badge-rose', lead: 'badge-rose' };
+    return map[level] || 'badge-slate';
+}
+
+function statusBadgeClass(status) { /* unused in scan */ return 'badge-slate'; }
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
+{% block head %}
+<style>
+[x-cloak] { display: none !important; }
+</style>
+{% endblock %}

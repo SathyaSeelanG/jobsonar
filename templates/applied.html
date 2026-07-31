@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Applied Jobs — Job Agent Pro{% endblock %}
+{% block nav_subtitle %}Tracked applications with notes & status{% endblock %}
+{% block content %}
+<div x-data="appliedJobs()" x-init="init()" class="space-y-6">
+    <div class="glass-panel p-4 sm:p-6">
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex-1 min-w-[200px]">
+                <input type="text" x-model="filters.search" @input.debounce="loadJobs()" placeholder="Search title, company, notes..." class="input-field">
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Source</label>
+                    <select x-model="filters.source" @change="loadJobs()" class="select-field">
+                        <option value="all">All Sources</option>
+                        <template x-for="s in availableSources" :key="s">
+                            <option :value="s" x-text="sourceLabel(s)"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Location</label>
+                    <select x-model="filters.location" @change="loadJobs()" class="select-field">
+                        <option value="all">All Locations</option>
+                        <template x-for="loc in availableCities" :key="loc">
+                            <option :value="loc" x-text="loc"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1.5 px-1">Apply Type</label>
+                    <select x-model="filters.applyType" @change="loadJobs()" class="select-field">
+                        <option value="all">All Types</option>
+                        <option value="apply_now">Apply Now</option>
+                        <option value="quick_apply">Quick Apply</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/80 border border-white/10">
+        <span class="text-xs font-bold text-violet-400 font-display" x-text="statsText"></span>
+    </div>
+
+    <div id="jobs-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div class="col-span-full text-center py-20 text-slate-500">
+            <div class="text-4xl mb-3">📭</div>
+            <p class="font-display font-bold text-slate-300">No applied jobs matched</p>
+            <p class="text-sm mt-1">Jobs you mark as applied will appear here.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function appliedJobs() {
+    return {
+        jobs: [],
+        filters: { search: '', source: 'all', location: 'all', applyType: 'all' },
+        availableSources: [],
+        availableCities: [],
+        init() { this.loadJobs(); },
+        sourceLabel(s) {
+            const map = { simplyhired:'SimplyHired', linkedin:'LinkedIn', naukri:'Naukri', adzuna:'Adzuna', jsearch:'JSearch', greenhouse:'Greenhouse', lever:'Lever', ashby:'Ashby', timesjobs:'TimesJobs', watchlist:'Watchlist / Career Portal', keka:'Keka ATS', smartrecruiters:'SmartRecruiters', rippling:'Rippling', jsonld:'JSON-LD', nextdata:'Next.js' };
+            return map[s] || s.charAt(0).toUpperCase() + s.slice(1);
+        },
+        get statsText() {
+            const filtered = this.jobs.length;
+            return `${filtered} applied job${filtered === 1 ? '' : 's'} — most recent first`;
+        },
+        async loadJobs() {
+            const params = new URLSearchParams({ search: this.filters.search, source: this.filters.source, location: this.filters.location, apply_type: this.filters.applyType });
+            const r = await fetch('/api/jobs/applied?' + params.toString());
+            const data = await r.json();
+            this.availableSources = data.sources || [];
+            this.availableCities = data.cities || [];
+            this.jobs = data.jobs || [];
+            const grid = document.getElementById('jobs-grid');
+            if (!this.jobs.length) {
+                grid.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500"><div class="text-4xl mb-3">📭</div><p class="font-display font-bold text-slate-300">No applied jobs matched</p><p class="text-sm mt-1">Jobs you mark as applied will appear here.</p></div>';
+                return;
+            }
+            grid.innerHTML = this.jobs.map((job, idx) => {
+                const level = (job.experience_level || '').toLowerCase();
+                const scoreReason = job.score_reason ? ` title="${job.score_reason.replace(/"/g, '&quot;')}"` : '';
+                const descId = `desc-${idx}`;
+                const description = job.description ? `<div class="job-desc" id="${descId}">${escapeHtml(job.description)}</div><button type="button" @click="toggleDesc('${descId}', this)" class="text-cyan-400 text-xs font-bold hover:underline mt-1">Show more</button>` : '';
+                const notes = job.notes ? `<div class="bg-amber-500/8 border border-amber-500/20 rounded-lg p-2.5 text-xs text-amber-400 mt-2">📝 ${escapeHtml(job.notes)}</div>` : '';
+                const appliedBadge = job.applied_at ? `<span class="badge badge-violet">Applied ${appliedLabel(job.applied_at)}</span>` : '';
+                const applyBadge = job.apply_type === 'quick_apply' ? '<span class="badge badge-rose">Quick Apply</span>' : '<span class="badge badge-slate">Apply Now</span>';
+
+                return `<article class="job-card animate-fade-in-up" style="animation-delay: ${Math.min(idx * 30, 300)}ms">
+                    <div class="space-y-2">
+                        <h3 class="text-base font-bold text-white leading-snug break-words">${escapeHtml(job.title)}</h3>
+                        <p class="text-sm font-semibold text-cyan-400">${escapeHtml(job.company || 'Unknown Company')}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="badge badge-emerald"${scoreReason}>Score ${Number(job.score || 0)}</span>
+                        ${applyBadge}
+                        ${level ? `<span class="badge ${levelBadgeClass(level)}">${escapeHtml(level)}</span>` : ''}
+                        <span class="badge badge-slate">${escapeHtml(job.location || 'N/A')}</span>
+                        ${job.salary ? `<span class="badge" style="background:rgba(52,211,153,0.12);color:#6ee7b7">💰 ${escapeHtml(job.salary)}</span>` : ''}
+                        ${appliedBadge}
+                    </div>
+                    ${description}
+                    ${notes}
+                    <div class="flex items-center justify-between pt-3 border-t border-white/6 gap-2 flex-wrap">
+                        <span class="text-xs text-slate-600 capitalize">${escapeHtml(job.source || 'unknown')}</span>
+                        <div class="flex gap-2">
+                            <button @click="archiveJob('${job.id}', this)" class="btn btn-warning !py-1.5 !px-3 !text-xs">Archive</button>
+                            <button @click="deleteJob('${job.id}', this)" class="btn btn-danger !py-1.5 !px-3 !text-xs">Delete</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs mt-2">
+                        ${job.company_careers_url && job.company_careers_url !== job.url ? `<a href="${escapeHtml(job.company_careers_url)}" target="_blank" rel="noopener" class="text-slate-500 hover:text-slate-300 font-medium transition-colors">Careers ↗</a>` : ''}
+                        ${job.url ? `<a href="${escapeHtml(job.url)}" target="_blank" rel="noopener" class="text-brand-400 hover:text-brand-300 font-bold transition-colors">Open Posting →</a>` : ''}
+                    </div>
+                </article>`;
+            }).join('');
+
+            grid.querySelectorAll('.job-desc-toggle').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const desc = document.getElementById(btn.dataset.target);
+                    const expanded = desc.classList.toggle('max-h-none');
+                    btn.textContent = expanded ? 'Show less' : 'Show more';
+                });
+            });
+        },
+        toggleDesc(id, btn) {
+            const el = document.getElementById(id);
+            el.classList.toggle('max-h-none');
+            const expanded = el.classList.contains('max-h-none');
+            btn.textContent = expanded ? 'Show less' : 'Show more';
+        },
+        async archiveJob(id, btn) {
+            btn.disabled = true; btn.textContent = 'Archiving...';
+            const r = await fetch('/api/jobs/' + id + '/archive', { method: 'POST' });
+            const d = await r.json();
+            if (d.error) { alert(d.error); btn.disabled = false; btn.textContent = 'Archive'; }
+            else this.loadJobs();
+        },
+        async deleteJob(id, btn) {
+            if (!confirm('Remove this applied job permanently?')) return;
+            btn.disabled = true; btn.textContent = 'Removing...';
+            const r = await fetch('/api/jobs/' + id + '/delete', { method: 'POST' });
+            const d = await r.json();
+            if (d.error) { alert(d.error); btn.disabled = false; btn.textContent = 'Delete'; }
+            else this.loadJobs();
+        }
+    }
+}
+
+function appliedLabel(isoStr) {
+    const ts = new Date(isoStr);
+    if (isNaN(ts.getTime())) return '';
+    return ts.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function levelBadgeClass(level) {
+    const map = { fresher: 'badge-cyan', junior: 'badge-blue', mid: 'badge-amber', senior: 'badge-rose', lead: 'badge-rose' };
+    return map[level] || 'badge-slate';
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
