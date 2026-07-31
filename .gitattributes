@@ -1,0 +1,11 @@
+# Normalise line endings so a Windows and a Linux contributor don't produce a
+# whole-file diff for each other. Text is LF in the repository; git checks it
+# out with the platform's native endings.
+* text=auto
+
+# Shell scripts must stay LF even on Windows — CRLF breaks the shebang.
+*.sh text eol=lf
+
+# Generated / vendored files: keep them out of diffs and language stats.
+static/css/main.css linguist-generated=true
+package-lock.json  linguist-generated=true
