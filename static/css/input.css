@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-gray-950 text-slate-100 antialiased;
+    background-image:
+      radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+      radial-gradient(at 85% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-glass;
+  }
+
+  .badge {
+    @apply inline-flex items-center min-h-[26px] px-2.5 py-1 rounded-full text-xs font-semibold bg-white/10 text-slate-300;
+  }
+  .badge-emerald { @apply bg-brand-500/15 text-brand-400 border border-brand-500/30; }
+  .badge-cyan { @apply bg-cyan-500/15 text-cyan-400 border border-cyan-500/30; }
+  .badge-violet { @apply bg-violet-500/15 text-violet-400 border border-violet-500/30; }
+  .badge-amber { @apply bg-amber-500/15 text-amber-400 border border-amber-500/30; }
+  .badge-rose { @apply bg-rose-500/15 text-rose-400 border border-rose-500/30; }
+  .badge-blue { @apply bg-blue-500/15 text-blue-400 border border-blue-500/30; }
+  .badge-slate { @apply bg-slate-500/15 text-slate-400 border border-slate-500/30; }
+
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer border;
+  }
+  .btn-primary {
+    @apply bg-gradient-to-r from-brand-600 to-brand-500 text-white border-brand-500 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 hover:-translate-y-0.5;
+  }
+  .btn-ghost {
+    @apply bg-white/10 text-slate-300 border-white/10 hover:bg-white/20 hover:text-white;
+  }
+  .btn-danger {
+    @apply bg-rose-500/12 text-rose-400 border-rose-500/30 hover:bg-rose-500/22 hover:border-rose-500/50;
+  }
+  .btn-warning {
+    @apply bg-amber-500/12 text-amber-400 border-amber-500/30 hover:bg-amber-500/22 hover:border-amber-500/50;
+  }
+  .btn:disabled {
+    @apply opacity-60 cursor-not-allowed hover:transform-none;
+  }
+
+  .job-card {
+    @apply relative bg-gradient-to-br from-slate-800/50 to-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-glass transition-all duration-300;
+  }
+  .job-card::before {
+    content: "";
+    @apply absolute top-0 left-5 right-5 h-[3px] rounded-b bg-gradient-to-r from-brand-500 via-cyan-500 to-violet-500 opacity-85 transition-opacity duration-300;
+  }
+  .job-card:hover {
+    @apply -translate-y-1 scale-[1.01] border-white/20 shadow-glass-lg;
+  }
+  .job-card:hover::before {
+    @apply opacity-100;
+  }
+
+  .input-field {
+    @apply w-full border border-white/10 bg-slate-900/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 transition-all duration-200;
+  }
+  .input-field:hover {
+    @apply border-white/24;
+  }
+  .input-field:focus {
+    @apply outline-none border-brand-500 ring-2 ring-brand-500/25;
+  }
+
+  .select-field {
+    @apply input-field;
+    @apply pr-8 appearance-none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+  }
+
+  /* Scan-page filter chips (sources / location / role / experience).
+     Kept as real compiled classes (not @apply in a page <style> block,
+     which the browser can't parse) so they always render regardless of
+     which template uses them. */
+  .filter-panel {
+    @apply bg-slate-950/40 border border-white/8 rounded-xl p-4;
+  }
+  .filter-panel-header {
+    @apply flex items-center justify-between flex-wrap gap-2 mb-3;
+  }
+  .filter-panel-title {
+    @apply font-display text-sm font-bold text-slate-300;
+  }
+  .filter-panel-hint {
+    @apply text-[11px] text-slate-600 font-normal;
+  }
+  .filter-count-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30;
+  }
+  .source-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold cursor-pointer select-none;
+    @apply bg-slate-900/60 border-white/10 text-slate-400 transition-colors duration-150;
+  }
+  .source-chip:hover {
+    @apply border-cyan-500/50 text-white bg-slate-800/80;
+  }
+  .source-chip.active {
+    @apply bg-cyan-500/15 border-cyan-500 text-cyan-300 shadow-[0_0_0_1px_rgba(6,182,212,0.35)];
+  }
+  .source-chip .chip-check {
+    @apply hidden;
+  }
+  .source-chip.active .chip-check {
+    @apply inline;
+  }
+  .filter-chip-scroll {
+    @apply flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1;
+  }
+}

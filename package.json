@@ -1,0 +1,42 @@
+{
+  "name": "jobsonar",
+  "version": "1.0.0",
+  "description": "Self-hosted job search agent: sweeps job boards, public ATS APIs and company career pages, scores every posting against your profile, and pre-fills applications you submit yourself.",
+  "private": true,
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build:css": "postcss static/css/input.css -o static/css/main.css",
+    "watch:css": "postcss static/css/input.css -o static/css/main.css --watch"
+  },
+  "keywords": [
+    "job-search",
+    "job-scraper",
+    "ats",
+    "greenhouse",
+    "lever",
+    "ashby",
+    "flask",
+    "playwright",
+    "automation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SathyaSeelanG/jobsonar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SathyaSeelanG/jobsonar/issues"
+  },
+  "homepage": "https://github.com/SathyaSeelanG/jobsonar#readme",
+  "author": "Sathya Seelan G",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.11",
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.24",
+    "postcss-cli": "^11.0.1",
+    "tailwindcss": "^3.4.19"
+  }
+}
