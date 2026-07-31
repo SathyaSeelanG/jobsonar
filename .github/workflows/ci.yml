@@ -136,8 +136,15 @@ jobs:
           from pathlib import Path
           # A literal user home directory is a personal detail and breaks the tool
           # for everyone else. Derive from Path.home() instead. Placeholders like
-          # C:\\\\Users\\\\<you> are fine.
-          rx = re.compile(r'(?i)(?:C:\\\\\\\\Users\\\\\\\\|/home/|/Users/)(?!<)[A-Za-z0-9._-]+')
+          # C:/Users/<you> are fine.
+          #
+          # The pattern is built from chr(92) rather than written with backslash
+          # escapes: this source passes through YAML and then a double-quoted
+          # shell string, each of which eats a layer, and the count silently
+          # decided whether a single-backslash path matched at all. B + '+' now
+          # matches both a raw path and a source-escaped one.
+          B = chr(92)
+          rx = re.compile('(?i)(?:C:' + B + '+Users' + B + '+|/home/|/Users/)(?!<)[A-Za-z0-9._-]+')
           allowed = re.compile(r'(?i)(<you>|<user>|<username>|runner|USERNAME)')
           skip = {'package-lock.json'}
           exts = {'.py', '.yaml', '.yml', '.md', '.html', '.js', '.json', '.cfg', '.toml', '.txt'}
