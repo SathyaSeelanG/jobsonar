@@ -51,23 +51,89 @@ web_workers: 8
 watchlist_company_limit: 0   # 0 = all companies
 watchlist_workers: 15         # parallel career-page fetches
 
+# ---------------------------------------------------------------------------
 # Direct ATS feeds — add company board tokens you care about.
-# Greenhouse token = the slug in boards.greenhouse.io/<token>
-# Seeded via web research (July 2026) with companies confirmed hiring for
-# Chennai roles on their public Greenhouse board. Most postings here skew
-# senior/enterprise — the fresher/experience/location filters in scoring.py
-# do the narrowing, this just widens what gets fetched in the first place.
-greenhouse_boards: [tekion, integrate, arcadiacareers, fourkites, poshmark, appian, zafinlabsamericasinc, phonepe]
+#
+# Every token below was probed live before being listed, and the trailing
+# comment is the measured yield: total postings / how many are in Chennai.
+# Boards with a strong India presence but zero Chennai postings are kept on
+# purpose — India-wide hiring rotates through Chennai, and a board that is
+# empty for your city this week is not a dead board. Boards that returned 0
+# jobs on any platform were removed instead.
+#
+# The scoring filters (experience level, location, freshness) narrow what
+# actually reaches your shortlist; these lists only widen what gets fetched.
+# ---------------------------------------------------------------------------
+
+# Greenhouse token = the slug in job-boards.greenhouse.io/<token>
+greenhouse_boards:
+  - mitsogoinc            #  35 total / 21 Chennai  <- best Chennai ratio measured
+  - appian                # 198 total / 40 Chennai  <- best board in this list
+  - tekion                #  75 total /  9 Chennai
+  - devrev                #  42 total /  1 Chennai / 33 India
+  - arcadiacareers        #  12 total /  4 Chennai
+  - fourkites             #  11 total /  3 Chennai
+  - phonepe               #  69 total /  0 Chennai / 49 India
+  - zafinlabsamericasinc  #  26 total /  0 Chennai /  5 India
+  - rubrik                # 107 total /  0 Chennai / 24 India
+  - postman               # 108 total /  0 Chennai / 12 India
+  - groww                 #  11 total /  0 Chennai / 11 India
+  - druva                 #  27 total /  0 Chennai / 10 India
+  - turing                #  27 total /  0 Chennai /  9 India
 # Lever token = the slug in jobs.lever.co/<token>
-lever_boards: [dozee, brillio-2, pditechnologies, nium, cprime]
+lever_boards:
+  - pditechnologies       #  19 total /  6 Chennai
+  - brillio-2             #  99 total /  4 Chennai
+  - paytm                 # 239 total /  3 Chennai / 193 India  <- largest India board found
+  - nium                  #  37 total /  2 Chennai
+  - dozee                 #  27 total /  1 Chennai
+  - cprime                #  14 total /  1 Chennai
+  - meesho                #  49 total /  0 Chennai / 45 India
+  - hevodata              #  41 total /  0 Chennai / 39 India
+  - zeta                  #  24 total /  0 Chennai / 23 India
+  - mindtickle            #  21 total /  0 Chennai / 20 India
+  - cred                  #   4 total /  0 Chennai /  4 India
 # Ashby board/company names for jobs.ashbyhq.com/<name>
-ashby_boards: [netgear, poshmark]
+ashby_boards:
+  - netgear               #  35 total /  9 Chennai
+  - poshmark              #  28 total /  3 Chennai
+  - atlan                 #   5 total /  0 Chennai /  5 India
 # SmartRecruiters company IDs for api.smartrecruiters.com
-smartrecruiters_companies: []
+smartrecruiters_companies:
+  - Freshworks            # 100 total / 20 Chennai
 # Rippling public board slugs
 rippling_boards: []
-# Keka token = the subdomain in <token>.keka.com/careers (best-effort, see ats.py:fetch_keka)
-keka_boards: []          # e.g. [surveysparrow]
+# Recruitee / Personio / Breezy / Workable are all live and working fetchers,
+# but they are European-centric: ~90 India-relevant slugs were probed across the
+# four and every one returned zero open roles. They stay empty on purpose — the
+# fetchers still earn their place through watchlist auto-detection, which is
+# where a non-Indian company on one of these platforms gets picked up.
+# Recruitee: the subdomain in <slug>.recruitee.com
+recruitee_boards: []
+# Personio: the subdomain in <slug>.jobs.personio.de
+personio_boards: []
+# Breezy HR: the subdomain in <slug>.breezy.hr (feed carries no description —
+# the watchlist hydrator fills it in when the company is also on the watchlist)
+breezy_boards: []
+# Workable: the account slug in apply.workable.com/<slug>
+workable_boards: []
+# BambooHR: the subdomain in <slug>.bamboohr.com/careers.
+# Field mapping is unverified — no probed board had open roles. See ats.py.
+bamboohr_boards: []
+# Workday needs three parts, written as "tenant/dc/site" — read them off a real
+# board URL like <tenant>.<dc>.myworkdayjobs.com/<site>. Do not guess: the API
+# answers 422 for an unknown tenant and 404 for a known tenant with the wrong
+# site name, and site names are arbitrary per company.
+workday_tenants:
+  - uniphore/wd503/Uniphore    # Chennai HQ, detected off its own careers page
+  - browserstack/wd3/External
+  - citi/wd5/2                 # 2000 total / 12 India per 40 sampled
+# Keka token = the subdomain in <token>.keka.com/careers. Keka is India-only and
+# common among Chennai/Bangalore product startups.
+keka_boards:
+  - sisainfosec           #  20 total
+  - disprz                #  18 total
+  - surveysparrow         #   3 total
 # Optional direct career pages for generic structured-data extraction
 jsonld_urls: []
 nextdata_urls: []
@@ -78,10 +144,16 @@ sources:
   jsearch: true
   greenhouse: true
   lever: true
-  keka: false             # best-effort, verify selectors against a real board first (see ats.py)
+  keka: true              # India-only ATS, verified against three live boards
   ashby: true             # Ashby public job board API
-  smartrecruiters: false  # SmartRecruiters API (no auth, but needs company_id)
+  smartrecruiters: true   # SmartRecruiters API (no auth, but needs company_id)
   rippling: false         # Rippling ATS API (no auth)
+  recruitee: true         # Recruitee /api/offers/ feed
+  personio: true          # Personio /xml feed
+  breezy: true            # Breezy HR /json feed
+  workable: true          # Workable embedded-widget account feed
+  workday: true           # Workday CXS API (needs workday_tenants entries)
+  bamboohr: false         # unverified field mapping — enable once you have a live board
   # Generic structured-data extraction from career pages
   jsonld: true            # JSON-LD JobPosting schema extraction
   nextdata: true          # Next.js __NEXT_DATA__ extraction
