@@ -120,7 +120,7 @@ deliberately.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `posted_within_days` | `3` | Drop postings older than this. Watchlist jobs get a 21-day floor — career pages rarely carry a precise date and sit unchanged longer. |
+| `posted_within_days` | `3` | Drop postings older than this. Watchlist **and direct-ATS** jobs get a 21-day floor — career pages rarely carry a precise date, and what an ATS reports is an update timestamp rather than a posted date (several send none at all). |
 | `min_score` | `35` | Shortlist cutoff. Lower-scoring jobs are stored but not shortlisted. |
 | `max_results_per_query` | `50` | Per-source cap per query. |
 | `adzuna_country` | `in` | Adzuna country code (`in`, `us`, `gb`, …). |
@@ -140,12 +140,18 @@ The highest-yield setting in the file. One token typically returns tens of jobs
 straight from the company, often before any aggregator indexes them.
 
 ```yaml
-greenhouse_boards: [tekion, appian, fourkites]   # boards.greenhouse.io/<token>
+greenhouse_boards: [tekion, appian, fourkites]   # job-boards.greenhouse.io/<token>
 lever_boards:      [dozee, nium]                 # jobs.lever.co/<token>
 ashby_boards:      [netgear]                      # jobs.ashbyhq.com/<name>
-smartrecruiters_companies: []                     # SmartRecruiters company IDs
+smartrecruiters_companies: [Freshworks]           # SmartRecruiters company IDs
 rippling_boards:   []                             # ats.rippling.com/<slug>/jobs
-keka_boards:       []                             # <subdomain>.keka.com/careers
+recruitee_boards:  []                             # <slug>.recruitee.com
+personio_boards:   []                             # <slug>.jobs.personio.de
+breezy_boards:     []                             # <slug>.breezy.hr
+workable_boards:   []                             # apply.workable.com/<slug>
+bamboohr_boards:   []                             # <slug>.bamboohr.com/careers
+keka_boards:       [disprz, sisainfosec]          # <subdomain>.keka.com/careers
+workday_tenants:   [uniphore/wd503/Uniphore]      # "tenant/dc/site", see below
 
 jsonld_urls:   []    # career pages exposing JSON-LD JobPosting
 nextdata_urls: []    # Next.js career pages exposing __NEXT_DATA__
@@ -153,6 +159,26 @@ nextdata_urls: []    # Next.js career pages exposing __NEXT_DATA__
 
 **Finding a token:** open a company's Careers page and look at where a job link
 points. `boards.greenhouse.io/acme/jobs/123` → the token is `acme`.
+
+**Workday is the exception** — it needs three components, so each entry is one
+`"tenant/dc/site"` string read off the board URL:
+`cognizant.wd1.myworkdayjobs.com/CognizantCareers` → `"cognizant/wd1/CognizantCareers"`.
+Entries that don't split into exactly three parts are skipped. Site names are
+arbitrary per company and not worth guessing — get the URL from the real careers
+page. See [SOURCES.md](SOURCES.md) for the error codes that tell you which of the
+three parts is wrong.
+
+**Four of these ship empty on purpose.** `recruitee_boards`, `personio_boards`,
+`breezy_boards` and `workable_boards` all have working fetchers, but ~90
+India-relevant slugs were probed across the four and none had open roles — those
+platforms are European-centric. They still contribute via watchlist
+auto-detection.
+
+**Verify a token before adding it.** A dead token costs a request per scan and
+returns silently empty, which is indistinguishable from a live board with nothing
+open. The tokens shipped in `config/search.yaml` each carry a comment with their
+measured yield; `python run.py scrape-report` gives you the same numbers for
+yours.
 
 **Note:** the `jsonld` and `nextdata` source toggles do nothing unless you also
 populate `jsonld_urls` / `nextdata_urls`. Detection during a *watchlist* crawl
@@ -167,9 +193,15 @@ sources:
   greenhouse: true      # public API, no key
   lever: true           # public API, no key
   ashby: true           # public API, no key
-  smartrecruiters: false
+  smartrecruiters: true # public API, no key (needs company IDs)
   rippling: false
-  keka: false           # selectors unverified — see job_agent/sources/ats.py
+  recruitee: true       # public API, no key
+  personio: true        # public XML feed, no key
+  breezy: true          # public API, no key (feed carries no description)
+  workable: true        # public widget API, no key
+  workday: true         # only acts on workday_tenants
+  keka: true            # public careers page, no key (India-only ATS)
+  bamboohr: false       # record fields unverified — see docs/SOURCES.md
   jsonld: true          # only acts on jsonld_urls
   nextdata: true        # only acts on nextdata_urls
   linkedin: true        # public jobs-guest endpoint, no login
@@ -185,6 +217,11 @@ sources:
 ```
 
 Turning a source off skips it entirely — no requests, no wasted wall-clock.
+
+`adzuna` and `jsearch` are also turned off automatically when their credentials
+are absent, with one dim line saying which variable to set. They would otherwise
+contribute one no-op task per query × location — rows of "0 jobs, no error" in
+`scrape-report`, which is exactly what a broken source looks like.
 
 ### LLM
 

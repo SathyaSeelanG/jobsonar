@@ -25,22 +25,68 @@ days before any aggregator indexes it.
 | Ashby | `api.ashbyhq.com/posting-api/job-board/<name>` | `ashby_boards` | `jobs.ashbyhq.com/`**`acme`** |
 | SmartRecruiters | `api.smartrecruiters.com/v1/companies/<id>/postings` | `smartrecruiters_companies` | `careers.smartrecruiters.com/`**`Acme`** |
 | Rippling | `api.rippling.com/platform/api/ats/v1/board/<slug>/jobs` | `rippling_boards` | `ats.rippling.com/`**`acme`**`/jobs` |
-| Keka | `<subdomain>.keka.com/careers` | `keka_boards` | **`acme`**`.keka.com/careers` |
-| Workday | `<tenant>.<dc>.myworkdayjobs.com` CXS API | *(auto-detect only)* | `acme.wd3.myworkdayjobs.com/External` |
+| Recruitee | `<slug>.recruitee.com/api/offers/` | `recruitee_boards` | **`acme`**`.recruitee.com` |
+| Personio | `<slug>.jobs.personio.de/xml` | `personio_boards` | **`acme`**`.jobs.personio.de` |
+| Breezy HR | `<slug>.breezy.hr/json` | `breezy_boards` | **`acme`**`.breezy.hr` |
+| Workable | `apply.workable.com/api/v1/widget/accounts/<slug>?details=true` | `workable_boards` | `apply.workable.com/`**`acme`** |
+| Keka | `<subdomain>.keka.com/careers/api/jobs/default/active` | `keka_boards` | **`acme`**`.keka.com/careers` |
+| BambooHR | `<slug>.bamboohr.com/careers/list` | `bamboohr_boards` | **`acme`**`.bamboohr.com/careers` |
+| Workday | `<tenant>.<dc>.myworkdayjobs.com` CXS API | `workday_tenants` | `acme.wd3.myworkdayjobs.com/External` |
+
+**Greenhouse serves two hosts.** Boards moved to `job-boards.greenhouse.io`, but
+the old `boards.greenhouse.io` still resolves, so detection accepts either — plus
+the `embed/job_board?for=<token>` iframe form, where the token is in the query
+string rather than the path.
 
 **Lever's EU fallback** exists because Lever splits tenants across regions — a
 `404` on the US host isn't proof the board doesn't exist, so the fetcher retries
 against `api.eu.lever.co` before giving up.
 
-**Keka** ships with `keka: false`. Its selectors were written against one board
-and never verified across others; treat it as unproven. Keka matters
-disproportionately for Indian startups, so verifying it is a genuinely useful
-contribution.
+**Personio's feed is XML, not JSON**, and it's served without a charset header —
+the fetcher parses the raw bytes so the XML declaration picks the codec, because
+letting `requests` guess mojibakes every non-ASCII office name.
 
-**Workday** has a working fetcher but no config list — it's reachable only when
-the watchlist auto-detects a Workday careers page. Adding a `workday_tenants:`
-key to `config/search.yaml` and dispatching it alongside the others is a small,
-well-scoped first PR.
+**Workable's `details=true`** is what supplies description text, and it makes the
+response large: one probed account returned 2219 jobs / 9.6 MB. All fetchers take
+a `max_results` cap, wired to `max_results_per_query`.
+
+**SmartRecruiters hides its description.** The posting object's top-level
+`description` is always `null`; the text lives in `jobAd.sections` as four
+separate blocks (`jobDescription`, `qualifications`, `additionalInformation`,
+`companyDescription`), which the fetcher concatenates in that order so the
+6000-char cap truncates boilerplate rather than requirements. Its `ref` field is
+the API endpoint, not a page — the human-readable link is `postingUrl` on the
+detail response.
+
+**Keka** is enabled and verified against three live boards. It matters
+disproportionately for Indian startups: it is India-only, so it never shows up in
+a US-centric source list even though it is common among Chennai and Bangalore
+product companies. Its boards are JS-rendered, but the page is backed by a plain
+JSON route that returns more than the rendered cards do — including a numeric
+`experience` field, which the fetcher appends to the description text so the
+fresher/junior gate can read it. **BambooHR** still ships `false` — no probed board had open
+roles, so its field mapping is unverified. See the auto-detection section below.
+
+**Recruitee, Personio, Breezy and Workable are European-centric.** All four
+fetchers work, but ~90 India-relevant slugs were probed across them and every one
+returned zero open roles, so their `*_boards` keys ship empty on purpose. They
+still pay for themselves through watchlist auto-detection, which is how a
+non-Indian company on one of these platforms gets picked up.
+
+**Workday takes three parts**, so `workday_tenants` entries are `"tenant/dc/site"`
+strings read straight off a board URL:
+`cognizant.wd1.myworkdayjobs.com/CognizantCareers` → `"cognizant/wd1/CognizantCareers"`.
+Malformed entries are skipped rather than sent to the fetcher as empty strings.
+Don't try to guess them. The CXS API answers `422` for an unknown tenant and
+`404` for a real tenant with the wrong site name, so you can confirm a tenant
+exists without knowing its site — but site names are arbitrary per company
+(`External`, `2`, `IjpExternal`, `CognizantCareers`) and a 400-probe sweep of 50
+plausible tenants resolved only one site name. Read the real careers URL instead;
+`python run.py scrape-report` and the watchlist auto-detector both surface it.
+
+Workday is also the most expensive fetcher here — one detail request per posting
+on top of the 20-per-page listing calls — so `max_results_per_query` matters more
+for Workday tenants than for any other source.
 
 ### Adding a board
 
@@ -50,11 +96,19 @@ Find one job link on a company's careers page and read the host:
 boards.greenhouse.io/tekion/jobs/4287341    →  greenhouse_boards: [tekion]
 jobs.lever.co/dozee/8fa1...                 →  lever_boards: [dozee]
 jobs.ashbyhq.com/netgear/...                →  ashby_boards: [netgear]
+apply.workable.com/acme/j/A1B2C3/           →  workable_boards: [acme]
 ```
 
 One good token is worth more than a whole extra scraper. Verify it returns jobs
 before adding it — dead tokens cost a request per scan and return silently
 empty.
+
+The tokens shipped in `config/search.yaml` were each probed live, and the
+trailing comment on every entry is its measured yield (total postings / how many
+in Chennai). Boards with a strong India presence but zero Chennai postings are
+kept deliberately: India-wide hiring rotates through Chennai, so an empty week
+is not a dead board. Boards that returned zero jobs on any platform were
+dropped.
 
 ---
 
@@ -85,7 +139,15 @@ site plus referrals.
 
 **Freshness is handled differently here.** Career pages rarely carry a reliable
 posted date and a genuinely open role can sit unchanged for weeks, so watchlist
-jobs get a 21-day floor instead of the global `posted_within_days: 3`. Location
+jobs get a 21-day floor instead of the global `posted_within_days: 3`. Direct ATS
+feeds get the same floor, for the same reason plus one more: what they report is
+not a posted date. Greenhouse sends `updated_at`, Workable `published_on`,
+Recruitee `published_at`, SmartRecruiters `releasedDate`; Workday sends only
+relative prose ("Posted 5 Days Ago"), which the fetcher converts to a date so the
+gate can act on it; Lever and Ashby send nothing at all. Under the
+board-tuned 3-day window that produced a perverse split — a dateless Lever role
+was always kept, while the identical role on a Greenhouse board was dropped on
+day 4 purely because it happened to carry a timestamp. Location
 is also lenient: the company list is hand-vetted, so a blank or generic location
 ("India", "Hybrid") doesn't disqualify a job — only a different named metro
 does.
@@ -96,20 +158,40 @@ it while you're tuning other things.
 
 ### ATS auto-detection
 
-[`ats_detect.py`](../job_agent/sources/ats_detect.py) matches 11 URL patterns
-against the careers page HTML: Greenhouse, Lever, Ashby, SmartRecruiters,
-Workday, Rippling, Keka, BambooHR, Recruitee, Personio, Breezy.
+[`ats_detect.py`](../job_agent/sources/ats_detect.py) matches URL patterns
+against the careers page HTML and returns the first hit, so platforms with a
+working fetcher are listed ahead of detection-only ones.
 
-Two known gaps, both worth PRs:
+**Fetchable** (detection resolves to a real API call): Greenhouse, Lever, Ashby,
+SmartRecruiters, Workday, Rippling, Recruitee, Personio, Breezy, Workable, Keka,
+BambooHR.
 
-- **Detected but not fetchable** — BambooHR, Recruitee, Personio and Breezy are
-  recognised, but `fetch_ats_jobs()` has no branch for them, so detection
-  succeeds and then returns `[]`. Each needs a fetcher.
-- **Not detected at all** — the signature list is entirely Western platforms.
-  Zoho Recruit, Darwinbox, Freshteam, Workable, Oracle Fusion (`.oraclecloud.com`),
-  SuccessFactors, Taleo and PeopleStrong are missing, and several of those are
-  the *default* choice for Indian employers. This is the single highest-value
-  contribution to the project.
+**Detection-only** — recognised so a company can be attributed to its ATS, but
+`fetch_ats_jobs()` returns `[]` and the cascade falls through to JSON-LD and
+HTML extraction: Zoho Recruit, Darwinbox, Freshteam, Oracle Fusion
+(`.oraclecloud.com`), SuccessFactors, Taleo, PeopleStrong. This is not an
+oversight — each was probed and has no guessable public feed:
+
+| Platform | Endpoint tried | Result |
+|---|---|---|
+| Freshteam | `/api/job_postings` | 404 / 503 |
+| Darwinbox | `/ms/candidate/careers/getJobs` | 404 |
+| PeopleStrong | `/api/jobs` | 403 |
+| Zoho Recruit | careers portal | HTML only, no JSON |
+
+The canonical list lives in `ats_detect.DETECTION_ONLY`; read that rather than
+this table if you're writing code.
+
+**BambooHR is the one unverified fetcher.** The `{meta, result}` envelope is
+confirmed, but no probed subdomain (~190 of them) served a non-empty `result`,
+so the per-record field names are guesses read through a list of aliases.
+`bamboohr` is therefore `false` in the shipped config. If you have access to a
+live BambooHR board with open roles, confirming the record shape is a genuinely
+useful PR.
+
+Breezy's feed carries no description and its detail pages expose no JSON-LD, so
+Breezy jobs arrive with only department and employment type as text. When the
+same company is also on the watchlist the hydrator fills the description in.
 
 ---
 
