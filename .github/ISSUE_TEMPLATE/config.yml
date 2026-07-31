@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/SathyaSeelanG/jobsonar/security/advisories/new
+    about: Please report security issues privately, never as a public issue.
+  - name: Setup and configuration reference
+    url: https://github.com/SathyaSeelanG/jobsonar/blob/main/docs/CONFIGURATION.md
+    about: Check here before filing a setup issue — most config questions are answered.
+  - name: Questions and ideas
+    url: https://github.com/SathyaSeelanG/jobsonar/discussions
+    about: For open-ended questions, use Discussions rather than an issue.

@@ -1,0 +1,60 @@
+name: New job source / ATS adapter
+description: Propose a job board, ATS, or career-page platform JobSonar should support
+labels: ["enhancement", "source"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Adding one ATS platform can unlock every company that uses it, so these
+        are the highest-leverage contributions to the project.
+
+  - type: input
+    id: platform
+    attributes:
+      label: Platform name
+      placeholder: Zoho Recruit
+    validations:
+      required: true
+
+  - type: input
+    id: url-pattern
+    attributes:
+      label: Public job-board URL pattern
+      description: The shape of the URL, so it can be detected automatically.
+      placeholder: https://<company>.zohorecruit.com/jobs/Careers
+    validations:
+      required: true
+
+  - type: dropdown
+    id: access
+    attributes:
+      label: How can jobs be read?
+      options:
+        - Public JSON API (no auth)
+        - JSON embedded in the page (JSON-LD / __NEXT_DATA__ / inline script)
+        - Server-rendered HTML (needs parsing)
+        - JS-rendered (needs a headless browser)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: endpoint
+    attributes:
+      label: API endpoint or example board
+      description: |
+        A real URL that returns jobs, ideally with a sample of the response
+        shape. This is the single most useful thing you can provide.
+      render: text
+
+  - type: input
+    id: region
+    attributes:
+      label: Where is it common?
+      placeholder: India, mid-size product companies
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Rate limits, pagination quirks, whether location is a usable field.

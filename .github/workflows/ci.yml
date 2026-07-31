@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile & smoke test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: Byte-compile every module
+        run: python -m compileall -q app.py run.py job_agent scripts mcp_server
+
+      - name: Ruff (real errors only)
+        # Deliberately narrow: syntax errors, undefined names, broken f-strings.
+        # Style is not enforced — see CONTRIBUTING.md ("match the file you're editing").
+        run: ruff check . --select=E9,F63,F7,F82 --output-format=github
+
+      - name: Validate YAML config
+        run: |
+          python -c "
+          import pathlib, sys, yaml
+          bad = []
+          for path in sorted(pathlib.Path('config').glob('*.yaml')):
+              try:
+                  yaml.safe_load(path.read_text(encoding='utf-8'))
+              except Exception as exc:
+                  bad.append(f'{path}: {exc}')
+          for line in bad:
+              print(f'::error::{line}')
+          sys.exit(1 if bad else 0)
+          "
+
+      - name: Fresh-clone smoke test
+        # Runs with no .env* and no config/profile.yaml present — exactly the
+        # state a new contributor has straight after `git clone`.
+        run: |
+          python -c "
+          from pathlib import Path
+          from job_agent.util import load_env, load_profile
+          root = Path('.').resolve()
+          load_env(root)
+          profile = load_profile(root)
+          assert profile.get('skills'), 'profile.example.yaml fallback returned no skills'
+          import app, job_agent.cli, job_agent.scraper
+          print('fresh-clone smoke test OK')
+          "
+
+  privacy:
+    name: No secrets or personal data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert private files are not tracked
+        run: |
+          python -c "
+          import subprocess, sys, fnmatch
+          tracked = subprocess.run(['git', 'ls-files'], capture_output=True, text=True, check=True).stdout.split()
+          forbidden = ['.env', '.env.local', '.env.*', 'config/profile.yaml',
+                       'data/*', '*.db', '*.sqlite*', '*_auth.json', '*.xlsx', '*.log']
+          allowed = {'.env.example', 'data/.gitkeep'}
+          bad = [f for f in tracked
+                 if f not in allowed
+                 and any(fnmatch.fnmatch(f, p) for p in forbidden)]
+          for f in bad:
+              print(f'::error file={f}::{f} must not be tracked — it holds private data. Check .gitignore.')
+          sys.exit(1 if bad else 0)
+          "
+
+      - name: Scan tracked files for credential-shaped strings
+        run: |
+          python -c "
+          import re, subprocess, sys
+          from pathlib import Path
+          # Real key prefixes, plus any assignment of a long opaque literal to a
+          # secret-sounding name. .env.example is exempt: its values are blank.
+          patterns = [
+              re.compile(r'sk-ant-[A-Za-z0-9_\-]{20,}'),
+              re.compile(r'gh[pousr]_[A-Za-z0-9]{30,}'),
+              re.compile(r'AKIA[0-9A-Z]{16}'),
+              re.compile(r'(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*[\"\x27][A-Za-z0-9_\-]{16,}[\"\x27]'),
+          ]
+          skip_ext = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.woff', '.woff2', '.lock'}
+          tracked = subprocess.run(['git', 'ls-files'], capture_output=True, text=True, check=True).stdout.split()
+          hits = []
+          for name in tracked:
+              p = Path(name)
+              if p.suffix in skip_ext or name == '.env.example' or not p.is_file():
+                  continue
+              try:
+                  text = p.read_text(encoding='utf-8', errors='ignore')
+              except OSError:
+                  continue
+              for rx in patterns:
+                  for m in rx.finditer(text):
+                      line = text[:m.start()].count(chr(10)) + 1
+                      hits.append((name, line))
+          for name, line in hits:
+              print(f'::error file={name},line={line}::Possible credential committed here.')
+          sys.exit(1 if hits else 0)
+          "
+
+      - name: Scan tracked files for machine-specific home paths
+        run: |
+          python -c "
+          import re, subprocess, sys
+          from pathlib import Path
+          # A literal user home directory is a personal detail and breaks the tool
+          # for everyone else. Derive from Path.home() instead. Placeholders like
+          # C:\\\\Users\\\\<you> are fine.
+          rx = re.compile(r'(?i)(?:C:\\\\\\\\Users\\\\\\\\|/home/|/Users/)(?!<)[A-Za-z0-9._-]+')
+          allowed = re.compile(r'(?i)(<you>|<user>|<username>|runner|USERNAME)')
+          skip = {'package-lock.json'}
+          exts = {'.py', '.yaml', '.yml', '.md', '.html', '.js', '.json', '.cfg', '.toml', '.txt'}
+          tracked = subprocess.run(['git', 'ls-files'], capture_output=True, text=True, check=True).stdout.split()
+          hits = []
+          for name in tracked:
+              p = Path(name)
+              if name in skip or p.suffix not in exts or not p.is_file():
+                  continue
+              text = p.read_text(encoding='utf-8', errors='ignore')
+              for m in rx.finditer(text):
+                  if allowed.search(m.group(0)):
+                      continue
+                  hits.append((name, text[:m.start()].count(chr(10)) + 1, m.group(0)))
+          for name, line, val in hits:
+              print(f'::error file={name},line={line}::Hardcoded home path {val!r} — derive it from Path.home() instead.')
+          sys.exit(1 if hits else 0)
+          "

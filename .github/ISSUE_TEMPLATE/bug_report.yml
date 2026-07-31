@@ -1,0 +1,99 @@
+name: Bug report
+description: Something in JobSonar behaves incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing this.
+
+        **Before you paste anything:** log excerpts and config dumps can contain
+        your name, email, API keys, or session cookies. Please redact them.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Set `queries: ["React developer"]` and `locations: ["Chennai"]`
+        2. Run `python run.py search`
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part?
+      options:
+        - A specific source returns nothing / wrong results
+        - Scoring or filtering (wrong jobs kept or dropped)
+        - Web UI (Flask app)
+        - CLI
+        - Tracker / database / export
+        - Tailoring or LLM scoring
+        - Apply / browser autofill
+        - Setup or configuration
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: source-name
+    attributes:
+      label: Source name (if applicable)
+      description: e.g. greenhouse, watchlist, simplyhired, adzuna
+      placeholder: greenhouse
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python --version`
+      placeholder: 3.11.7
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: Version / commit
+      description: Output of `git rev-parse --short HEAD`
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: |
+        Console output or lines from `data/run_logs/`.
+        **Redact API keys, emails, names, and cookies.**
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have removed all personal data and credentials from this report
+          required: true
+        - label: I searched existing issues for a duplicate
+          required: true

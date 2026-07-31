@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: |
+        Describe the job-hunting problem, not the implementation. What are you
+        currently missing or doing by hand?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New job source or ATS adapter
+        - Better scoring / filtering
+        - Web UI
+        - CLI
+        - Tracking / export
+        - LLM scoring or tailoring
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Including "I currently work around it by..."
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This does not involve auto-submitting applications, bypassing CAPTCHAs/logins, or defeating bot detection
+          required: true
+        - label: I searched existing issues for a duplicate
+          required: true
