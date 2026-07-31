@@ -1,0 +1,140 @@
+# ---------------------------------------------------------------------------
+# JobSonar search configuration.
+#
+# These are working defaults, not a personal setup — edit `queries` and
+# `locations` to your own stack and city and the whole pipeline retargets.
+# Everything here is safe to commit; personal details live in
+# config/profile.yaml and credentials in .env.local (both git-ignored).
+#
+# Full reference: docs/CONFIGURATION.md
+# ---------------------------------------------------------------------------
+
+# Role titles to search for. Every query runs against every enabled source
+# and every location, so keep the list focused — 24 queries x 1 location is
+# already a few hundred HTTP requests per scan.
+queries:
+  - "MERN stack developer"
+  - "Full stack developer React Node"
+  - "Node.js developer"
+  - "Python developer"
+  - "Python Django developer"
+  - "Python full stack developer"
+  - "React developer"
+  - "React JS developer"
+  - "Frontend developer React"
+  - "Backend developer Node.js"
+  - "JavaScript developer"
+  - "Software engineer fresher"
+  - "Full stack developer fresher"
+  - "MERN stack developer fresher"
+  - "Associate software engineer"
+  - "Associate frontend developer"
+  - "Associate full stack engineer"
+  - "Junior full stack developer"
+  - "Junior React developer"
+  - "Junior Node.js developer"
+  - "Next.js developer"
+  - "Software developer React Node"
+  - "Web developer"
+  - "Web developer fresher"
+
+# Cities to search. Add "Remote" to also hit the keyless remote-job APIs.
+locations:
+  - "Chennai"
+
+adzuna_country: in       # in, us, gb, etc.
+max_results_per_query: 50
+min_score: 35            # 0-100; jobs below this are stored but not shortlisted
+posted_within_days: 3
+api_workers: 12
+web_workers: 8
+watchlist_company_limit: 0   # 0 = all companies
+watchlist_workers: 15         # parallel career-page fetches
+
+# Direct ATS feeds — add company board tokens you care about.
+# Greenhouse token = the slug in boards.greenhouse.io/<token>
+# Seeded via web research (July 2026) with companies confirmed hiring for
+# Chennai roles on their public Greenhouse board. Most postings here skew
+# senior/enterprise — the fresher/experience/location filters in scoring.py
+# do the narrowing, this just widens what gets fetched in the first place.
+greenhouse_boards: [tekion, integrate, arcadiacareers, fourkites, poshmark, appian, zafinlabsamericasinc, phonepe]
+# Lever token = the slug in jobs.lever.co/<token>
+lever_boards: [dozee, brillio-2, pditechnologies, nium, cprime]
+# Ashby board/company names for jobs.ashbyhq.com/<name>
+ashby_boards: [netgear, poshmark]
+# SmartRecruiters company IDs for api.smartrecruiters.com
+smartrecruiters_companies: []
+# Rippling public board slugs
+rippling_boards: []
+# Keka token = the subdomain in <token>.keka.com/careers (best-effort, see ats.py:fetch_keka)
+keka_boards: []          # e.g. [surveysparrow]
+# Optional direct career pages for generic structured-data extraction
+jsonld_urls: []
+nextdata_urls: []
+
+sources:
+  # API — needs ADZUNA_APP_ID + ADZUNA_APP_KEY in .env
+  adzuna: true
+  jsearch: true
+  greenhouse: true
+  lever: true
+  keka: false             # best-effort, verify selectors against a real board first (see ats.py)
+  ashby: true             # Ashby public job board API
+  smartrecruiters: false  # SmartRecruiters API (no auth, but needs company_id)
+  rippling: false         # Rippling ATS API (no auth)
+  # Generic structured-data extraction from career pages
+  jsonld: true            # JSON-LD JobPosting schema extraction
+  nextdata: true          # Next.js __NEXT_DATA__ extraction
+  # Scrapers — no keys; linkedin works, others often bot-blocked
+  linkedin: true
+  simplyhired: true
+  timesjobs: true
+  naukri: false
+  # Free keyless remote-job APIs — only queried when location == "Remote"
+  arbeitnow: true
+  remotive: true
+  remoteok: true
+  jobicy: true
+  # Company career-page watchlist — config/companies.yaml
+  # Now extracts INDIVIDUAL job listings via ATS detection + API calls
+  watchlist: true
+  watchlist_extract_jobs: true  # extract individual jobs (vs. page-level alerts)
+
+llm:
+  scoring: true          # use an LLM to refine the keyword score for shortlisted jobs
+  tailoring: true        # generate tailored resume bullets + cover letters
+  provider: omniroute    # omniroute (local gateway, free)
+  # OmniRoute (https://omniroute.online) — free, open-source multi-provider AI
+  # router you self-host, exposes an OpenAI-compatible endpoint at
+  # localhost:20128/v1 by default. Put OMNIROUTE_API_KEY (from its dashboard) in
+  # .env if your instance requires one.
+  omniroute_base_url: http://localhost:20128/v1
+  omniroute_model: auto  # or a specific routed model / mode alias like /coding, /cheap
+
+# LinkedIn feed-post scanning — pure Python (Playwright), no browser extension.
+# Setup: run `python run.py linkedin-login` once, then set enabled: true.
+# Reads only (never posts/comments) but keep queries/max_posts modest — see
+# job_agent/sources/linkedin_feed.py for the bot-detection caveat.
+# Naukri authenticated search — auto-launches YOUR Chrome via CDP.
+# No manual login or browser setup needed — it launches Chrome with your
+# default profile (where Naukri is already logged in), searches, and closes it.
+# Set enabled: true, then run `python run.py search` or `python run.py naukri-search`.
+naukri_auth:
+  enabled: false
+  cdp_port: 9222
+  max_results: 20
+  # Both default to the standard Chrome location for your OS and the current
+  # user's profile directory. Uncomment only to point at a custom install.
+  # chrome_path: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+  # user_data_dir: "C:\\Users\\<you>\\AppData\\Local\\Google\\Chrome\\User Data"
+  # Change to "Profile 1", "Profile 2", etc., to use a specific Chrome profile
+  profile_directory: "Default"
+
+linkedin_feed:
+  enabled: false
+  state_path: data/linkedin_auth.json
+  max_posts: 15
+  queries:
+    - "MERN stack hiring Chennai"
+    - "React developer intern Chennai"
+    - "Node.js fresher hiring Chennai"

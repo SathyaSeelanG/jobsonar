@@ -1,0 +1,611 @@
+companies:
+- name: CoreStack
+  homepage: https://www.corestack.io/
+- name: Testsigma
+  homepage: https://testsigma.com/
+- name: Amagi
+  homepage: https://www.amagi.com/
+- name: Ozonetel
+  homepage: https://ozonetel.com/
+- name: Ideas2IT
+  homepage: https://www.ideas2it.com/
+- name: Codilar
+  homepage: https://www.codilar.com/
+- name: Sedin Technologies
+  homepage: https://sedintechnologies.com/
+- name: Draup
+  homepage: https://draup.com/
+- name: Payoda Technology
+  homepage: https://www.payoda.com/
+- name: Karomi Technology
+  homepage: https://www.karomi.com/
+- name: Bahwan CyberTek
+  homepage: https://www.bahwancybertek.com/
+- name: Rocketlane
+  homepage: https://www.rocketlane.com/
+- name: CallHub
+  homepage: https://callhub.io/
+- name: PipeCandy
+  homepage: https://pipecandy.com/
+- name: TVS Next
+  homepage: https://tvsnext.com/
+- name: ValGenesis
+  homepage: https://www.valgenesis.com/
+  careers_url_override: https://jobs.lever.co/valgenesis
+  ats: lever
+  board_token: valgenesis
+- name: Facilio
+  homepage: https://facilio.com/
+- name: SaasAnt
+  homepage: https://www.saasant.com/
+- name: ZapScale
+  homepage: https://www.zapscale.com/
+- name: Springbord
+  homepage: https://www.springbord.com/
+- name: Kissflow
+  homepage: https://kissflow.com/
+  careers_url_override: https://careers.kissflow.com/
+  js_rendered: true
+- name: Fieldproxy
+  homepage: https://fieldproxy.com/
+  js_rendered: true
+- name: Resulticks
+  homepage: https://www.resulticks.com/
+- name: Cryotos
+  homepage: https://www.cryotos.com/
+- name: CultureMonkey
+  homepage: https://www.culturemonkey.io/
+- name: KPIsoft (Entomo)
+  homepage: https://www.kpisoft.com/
+- name: M2P Fintech
+  homepage: https://m2pfintech.com/
+- name: Mylapay
+  homepage: https://mylapay.com/
+- name: Minkasu
+  homepage: https://www.minkasupay.com/
+- name: IppoPay
+  homepage: https://www.ippopay.com/
+- name: Kaleidofin
+  homepage: https://www.kaleidofin.com/
+- name: Vivriti Capital
+  homepage: https://www.vivriticapital.com/
+- name: FSS (Financial Software & Systems)
+  homepage: https://www.fsstech.com/
+- name: Wibmo
+  homepage: https://wibmo.co/
+- name: FundsIndia
+  homepage: https://www.fundsindia.com/
+- name: Maveric Systems
+  homepage: https://maveric-systems.com/
+- name: Vayana Network
+  homepage: https://www.vayana.com/
+- name: CustomerXPs (Clari5)
+  homepage: https://www.clari5.com/
+- name: AssetPlus
+  homepage: https://www.partners.assetplus.in/
+- name: Northern Arc Capital
+  homepage: https://www.northernarc.com/
+- name: Yubi
+  homepage: https://www.go-yubi.com/
+- name: YNOS
+  homepage: https://www.ynos.in/
+- name: OroCorp
+  homepage: https://www.orocorp.in/
+- name: Digitap
+  homepage: https://www.digitap.ai/
+- name: Setu
+  homepage: https://setu.co/
+- name: EnKash
+  homepage: https://www.enkash.com/
+- name: PayMate
+  homepage: https://paymate.in/
+- name: NPST
+  homepage: https://www.npstx.com/
+- name: Karbon Card
+  homepage: https://www.karboncard.com/
+- name: Skillveri
+  homepage: https://skillveri.com/
+- name: BankBazaar
+  homepage: https://www.bankbazaar.com/
+- name: Xobin
+  homepage: https://xobin.com/
+- name: Talview
+  homepage: https://www.talview.com/
+- name: Vantage Circle
+  homepage: https://www.vantagecircle.com/
+- name: PeopleStrong
+  homepage: https://www.peoplestrong.com/
+- name: Springworks
+  homepage: https://www.springworks.in/
+- name: Qandle
+  homepage: https://www.qandle.com/
+- name: peopleHum
+  homepage: https://www.peoplehum.com/
+- name: NurtureBox
+  homepage: https://www.nurturebox.ai/
+- name: Uniphore
+  homepage: https://www.uniphore.com/
+- name: SurveySparrow
+  homepage: https://surveysparrow.com/
+  careers_url_override: https://surveysparrow.keka.com/careers
+  ats: keka
+  board_token: surveysparrow
+- name: K7 Computing
+  homepage: https://www.k7computing.com/
+- name: COSGrid Networks
+  homepage: https://www.cosgrid.com/
+  careers_url_override: https://www.cosgrid.com/company/careers/openings
+- name: CareStack
+  homepage: https://carestack.com/
+- name: Mitsogo (Hexnode)
+  homepage: https://www.mitsogo.com/
+- name: Gnani.ai
+  homepage: https://www.gnani.ai/
+- name: SuperOps
+  homepage: https://superops.com/
+- name: Detect Technologies
+  homepage: https://detecttechnologies.com/
+- name: SISA InfoSec
+  homepage: https://www.sisainfosec.com/
+- name: Prophaze
+  homepage: https://www.prophaze.com/
+- name: MocDoc
+  homepage: https://mocdoc.com/
+- name: Agilisium
+  homepage: https://www.agilisium.com/
+- name: Suyati (Milestone Technologies)
+  homepage: https://milestone.tech/
+- name: CustomerLabs
+  homepage: https://www.customerlabs.com/
+- name: Botminds.ai
+  homepage: https://www.botminds.ai/
+- name: Net Access India
+  homepage: https://www.netaccess-india.com/
+- name: Health Sensei
+  homepage: https://healthsensei.co.in/
+- name: Disprz
+  homepage: https://disprz.ai/
+- name: Attune Health (Attune Technologies)
+  homepage: https://attunelive.com/
+- name: Mad Street Den
+  homepage: https://www.madstreetden.com/
+  js_rendered: true
+- name: Zoho
+  homepage: https://www.zoho.com/
+  careers_url_override: https://www.zohocorp.com/careers
+- name: Freshworks
+  homepage: https://www.freshworks.com/
+  careers_url_override: https://www.freshworks.com/careers
+- name: Chargebee
+  homepage: https://www.chargebee.com/
+  ats: greenhouse
+  board_token: chargebee
+- name: Postman
+  homepage: https://www.postman.com/
+  ats: greenhouse
+  board_token: postman
+- name: BrowserStack
+  homepage: https://www.browserstack.com/
+  ats: greenhouse
+  board_token: browserstack
+- name: Whatfix
+  homepage: https://whatfix.com/
+  ats: greenhouse
+  board_token: whatfix
+- name: Moengage
+  homepage: https://www.moengage.com/
+  ats: greenhouse
+  board_token: moengage
+- name: CleverTap
+  homepage: https://clevertap.com/
+  ats: lever
+  board_token: clevertap
+- name: Vwo
+  homepage: https://vwo.com/
+  careers_url_override: https://careers.vwo.com/
+- name: Shiprocket
+  homepage: https://www.shiprocket.in/
+- name: Yellow.ai
+  homepage: https://yellow.ai/
+  ats: greenhouse
+  board_token: yellowai
+- name: DevRev
+  homepage: https://devrev.ai/
+  ats: ashby
+  board_token: devrev
+- name: InMobi
+  homepage: https://www.inmobi.com/
+  careers_url_override: https://careers.inmobi.com/
+- name: Zetwerk
+  homepage: https://www.zetwerk.com/
+- name: PhysicsWallah
+  homepage: https://www.pw.live/
+  ats: lever
+  board_token: physicswallah
+- name: Razorpay
+  homepage: https://razorpay.com/
+  ats: greenhouse
+  board_token: razorpay
+- name: Zenoti
+  homepage: https://www.zenoti.com/
+  ats: greenhouse
+  board_token: zenoti
+- name: Kovai.co
+  homepage: https://kovai.co/
+  careers_url_override: https://kovai.co/careers/
+- name: ManageEngine
+  homepage: https://www.manageengine.com/
+  careers_url_override: https://www.manageengine.com/careers.html
+- name: Virtusa
+  homepage: https://www.virtusa.com/
+  careers_url_override: https://www.virtusa.com/careers/
+  js_rendered: true
+- name: Wipro
+  homepage: https://www.wipro.com/
+  careers_url_override: https://careers.wipro.com/
+  js_rendered: true
+- name: HCLTech
+  homepage: https://www.hcltech.com/
+  careers_url_override: https://www.hcltech.com/careers
+  js_rendered: true
+- name: Tech Mahindra
+  homepage: https://www.techmahindra.com/
+  careers_url_override: https://careers.techmahindra.com/
+  js_rendered: true
+- name: Capgemini India
+  homepage: https://www.capgemini.com/in-en/
+  careers_url_override: https://www.capgemini.com/in-en/careers/
+  js_rendered: true
+- name: LTIMindtree
+  homepage: https://www.ltimindtree.com/
+  careers_url_override: https://careers.ltimindtree.com/
+  js_rendered: true
+- name: Cognizant
+  homepage: https://www.cognizant.com/
+  careers_url_override: https://careers.cognizant.com/global/en
+  js_rendered: true
+- name: Accenture India
+  homepage: https://www.accenture.com/in-en
+  careers_url_override: https://www.accenture.com/in-en/careers
+  js_rendered: true
+- name: HTC Global Services
+  homepage: https://www.htcinc.com/
+  careers_url_override: https://www.htcinc.com/careers/
+- name: Sutherland Global
+  homepage: https://www.sutherlandglobal.com/
+  careers_url_override: https://www.sutherlandglobal.com/careers/
+  js_rendered: true
+- name: QBurst
+  homepage: https://www.qburst.com/
+  careers_url_override: https://www.qburst.com/careers/
+- name: Fingent
+  homepage: https://www.fingent.com/
+  careers_url_override: https://www.fingent.com/careers/
+- name: Photon
+  homepage: https://www.photon.com/
+  careers_url_override: https://www.photon.com/careers/
+  js_rendered: true
+- name: Kaar Technologies
+  homepage: https://www.kaartech.com/
+  careers_url_override: https://www.kaartech.com/careers/
+- name: Zoho ManageEngine (Site24x7)
+  homepage: https://www.site24x7.com/
+  careers_url_override: https://www.zohocorp.com/careers
+- name: Robert Bosch Engineering (RBEI Chennai)
+  homepage: https://www.bosch.in/
+  careers_url_override: https://www.bosch.in/careers/
+  js_rendered: true
+- name: Verizon India
+  homepage: https://www.verizon.com/
+  careers_url_override: https://www.verizon.com/about/careers/search-verizon-jobs
+  js_rendered: true
+- name: Cyient
+  homepage: https://www.cyient.com/
+  careers_url_override: https://www.cyient.com/careers
+  js_rendered: true
+- name: Photon Interactive Ideas2IT Group (Agilisium sibling)
+  homepage: https://www.qentelli.com/
+  careers_url_override: https://www.qentelli.com/careers
+- name: Zifo RnD Solutions
+  homepage: https://www.zifornd.com/
+  careers_url_override: https://www.zifornd.com/careers/
+- name: Zluri
+  homepage: https://www.zluri.com/
+  careers_url_override: https://www.zluri.com/careers
+- name: Darwinbox
+  homepage: https://darwinbox.com/
+  careers_url_override: https://darwinbox.com/careers
+  js_rendered: true
+- name: Locus.sh
+  homepage: https://locus.sh/
+  careers_url_override: https://locus.sh/careers/
+- name: Innovaccer
+  homepage: https://innovaccer.com/
+  careers_url_override: https://innovaccer.com/careers
+  js_rendered: true
+- name: Highradius
+  homepage: https://www.highradius.com/
+  careers_url_override: https://www.highradius.com/careers/
+  js_rendered: true
+- name: Uplers
+  homepage: https://www.uplers.com/
+  careers_url_override: https://www.uplers.com/careers/
+- name: Freight Tiger
+  homepage: https://www.freighttiger.com/
+  careers_url_override: https://www.freighttiger.com/careers/
+- name: 6sense
+  homepage: https://6sense.com/
+  careers_url_override: https://6sense.com/careers/
+  js_rendered: true
+- name: Skyroot Aerospace
+  homepage: https://www.skyroot.in/
+  careers_url_override: https://www.skyroot.in/careers
+- name: Ather Energy
+  homepage: https://www.atherenergy.com/
+  careers_url_override: https://www.atherenergy.com/careers
+  js_rendered: true
+- name: Bigbasket
+  homepage: https://www.bigbasket.com/
+  careers_url_override: https://www.bigbasket.com/careers/
+  js_rendered: true
+- name: Simpl
+  homepage: https://getsimpl.com/
+  careers_url_override: https://getsimpl.com/careers
+- name: Hevo Data
+  homepage: https://hevodata.com/
+  careers_url_override: https://hevodata.com/careers/
+  js_rendered: true
+- name: WebEngage
+  homepage: https://webengage.com/
+  careers_url_override: https://webengage.com/careers/
+  js_rendered: true
+- name: LEAD Group
+  homepage: https://leadschool.in/
+  careers_url_override: https://leadschool.in/careers/
+  js_rendered: true
+- name: Fyle
+  homepage: https://www.fylehq.com/
+  careers_url_override: https://www.fylehq.com/careers
+- name: Kaleyra
+  homepage: https://www.kaleyra.com/
+  careers_url_override: https://www.kaleyra.com/careers/
+- name: Nutanix India
+  homepage: https://www.nutanix.com/
+  careers_url_override: https://www.nutanix.com/company/careers
+  js_rendered: true
+- name: Recko
+  homepage: https://www.recko.io/
+  careers_url_override: https://www.recko.io/careers
+- name: Attentive.ai
+  homepage: https://www.attentive.ai/
+  careers_url_override: https://www.attentive.ai/careers
+- name: Aujas Cybersecurity
+  homepage: https://www.aujas.com/
+  careers_url_override: https://www.aujas.com/careers/
+- name: Tekion
+  homepage: https://www.tekion.com/
+  careers_url_override: https://www.tekion.com/careers
+  js_rendered: true
+- name: Locobuzz
+  homepage: https://www.locobuzz.com/
+  careers_url_override: https://www.locobuzz.com/career/
+- name: FreshToHome
+  homepage: https://www.freshtohome.com/
+  careers_url_override: https://www.freshtohome.com/careers
+  js_rendered: true
+- name: Wingify
+  homepage: https://wingify.com/
+  careers_url_override: https://wingify.com/careers
+- name: Exotel
+  homepage: https://exotel.com/
+  careers_url_override: https://exotel.com/careers/
+  js_rendered: true
+- name: Zeta
+  homepage: https://www.zeta.tech/
+  careers_url_override: https://www.zeta.tech/careers
+  js_rendered: true
+- name: Hasura
+  homepage: https://hasura.io/
+  careers_url_override: https://hasura.io/careers/
+  js_rendered: true
+- name: Middleware Labs
+  homepage: https://middleware.io/
+  careers_url_override: https://middleware.io/careers/
+- name: Zoho Corporation
+  homepage: https://www.zoho.com/
+- name: Everstage
+  homepage: https://www.everstage.com/
+- name: Animaker
+  homepage: https://www.animaker.com/
+- name: HappyFox
+  homepage: https://www.happyfox.com/
+- name: FourKites
+  homepage: https://www.fourkites.com/
+- name: Zuper
+  homepage: https://zuper.co/
+- name: Codilar Technologies
+  homepage: https://www.codilar.com/
+- name: Yubi (CredAvenue)
+  homepage: https://www.go-yubi.com/
+- name: YNOS Venture Engine
+  homepage: https://www.ynos.in/
+- name: Attune Technologies
+  homepage: https://attunelive.com/
+- name: Agnikul Cosmos
+  homepage: https://agnikul.in/
+- name: The ePlane Company
+  homepage: https://eplane.ai/
+- name: Planys Technologies
+  homepage: https://www.planystech.com/
+- name: Pando
+  homepage: https://pando.ai/
+- name: GuardianLink
+  homepage: https://www.guardianlink.io/
+- name: Mad Street Den (Vue.ai)
+  homepage: https://www.madstreetden.com/
+- name: CONTUS Tech
+  homepage: https://www.contus.com/
+- name: KnackForge
+  homepage: https://knackforge.com/
+- name: SyberGate Technologies
+  homepage: https://sybergate.co.in/
+- name: Jasmin InfoTech
+  homepage: https://www.jasmin-infotech.com/
+- name: Kryptos Technologies
+  homepage: https://www.kryptostechnologies.com/
+- name: DataWENS Technologies
+  homepage: https://datawens.com/
+- name: Sathuram Software
+  homepage: https://sathuramsoft.com/
+- name: CaddyCode
+  homepage: https://caddycode.com/
+- name: Gilead Digital
+  homepage: https://gileaddigital.in/
+- name: Adyog Software
+  homepage: https://adyog.com/
+- name: Mindset Software Technologies
+  homepage: https://mindsetechnologies.com/
+- name: Provility Software
+  homepage: https://provility.com/
+- name: Scope Thinkers
+  homepage: https://scopethinkers.com/
+- name: Revolite Infotech
+  homepage: https://revolite.io/
+- name: Besoins Technologies
+  homepage: https://besoins.in/
+- name: HyperVerge
+  homepage: https://hyperverge.co/
+- name: Siam Computing
+  homepage: https://siamcomputing.com/
+- name: OptiSol Business Solutions
+  homepage: https://www.optisolbusiness.com/
+- name: Aspire Systems
+  homepage: https://www.aspiresys.com/
+- name: Intellect Design Arena
+  homepage: https://www.intellectdesign.com/
+- name: Indium Software
+  homepage: https://www.indiumsoftware.com/
+- name: Ionixx Technologies
+  homepage: https://ionixxtech.com/
+- name: Skcript
+  homepage: https://skcript.com/
+- name: Blazedream
+  homepage: https://www.blazedream.com/
+- name: Smarther Technologies
+  homepage: https://smarther.co/
+- name: Istudiotech
+  homepage: https://istudiotech.in/
+- name: Deforay Technologies
+  homepage: https://deforay.com/
+- name: CodeTez
+  homepage: https://codetez.com/
+- name: Paladin Software
+  homepage: https://paladinsoftwares.com/
+- name: Swathi Soft Solutions
+  homepage: https://swathisoft.com/
+- name: Greenvironment
+  homepage: https://greenvironmentindia.com/
+- name: Satori XR
+  homepage: https://satorixr.com/
+- name: DMA Technologies
+  homepage: https://dmatechnologies.com/
+- name: Vuram (WNS Vuram)
+  homepage: https://www.vuram.com/
+- name: SquareShift Technologies
+  homepage: https://squareshift.co/
+- name: Speridian Technologies
+  homepage: https://www.speridian.com/
+- name: Kovaion Consulting
+  homepage: https://kovaion.com/
+- name: Creators Web India
+  homepage: https://creatorswebindia.com/
+- name: Infonovum Technologies
+  homepage: https://infonovum.com/
+- name: WebBitech
+  homepage: https://webbitech.com/
+- name: Casperon Technologies
+  homepage: https://casperon.com/
+- name: Lendingkart
+  homepage: https://www.lendingkart.com/
+- name: Perfios Software
+  homepage: https://www.perfios.com/
+- name: Syndigo (Riversand)
+  homepage: https://syndigo.com/
+- name: Zencode Technologies
+  homepage: https://zencode.io/
+- name: SmarTek21
+  homepage: https://smartek21.com/
+- name: Prodapt Solutions
+  homepage: https://www.prodapt.com/
+- name: InApp Information Tech
+  homepage: https://inapp.com/
+- name: Aura Software Solutions
+  homepage: https://aurasoftsolutions.com/
+- name: Bounteous / Accolite
+  homepage: https://www.bounteous.com/
+- name: Changepond Technologies
+  homepage: https://www.changepond.com/
+- name: CorroHealth Infotech
+  homepage: https://corrohealth.com/
+- name: Sensiple Software Solutions
+  homepage: https://www.sensiple.com/
+- name: Data Patterns India
+  homepage: https://www.datapatternsindia.com/
+- name: Appian Corporation
+  homepage: https://appian.com/
+- name: Newgen Software
+  homepage: https://newgensoft.com/
+- name: Equiniti India
+  homepage: https://equiniti.com/
+- name: Toast Tab
+  homepage: https://pos.toasttab.com/
+- name: SunTec Group
+  homepage: https://www.suntecgroup.com/
+- name: Inspirisys Solutions
+  homepage: https://www.inspirisys.com/
+- name: Pulsus Healthtech
+  homepage: https://www.pulsus.com/
+- name: Hitachi Solutions India
+  homepage: https://global.hitachi-solutions.com/
+- name: Straive (SPi Global)
+  homepage: https://www.straive.com/
+- name: Likewize India
+  homepage: https://www.likewize.com/
+- name: LNW India (Light & Wonder)
+  homepage: https://www.lnw.com/
+- name: Thryve Digital Health
+  homepage: https://thryvedigital.com/
+- name: Apptivo
+  homepage: https://www.apptivo.com/
+- name: Cygnet Infotech
+  homepage: https://www.cygnetinfotech.com/
+- name: Sectigo
+  homepage: https://www.sectigo.com/
+- name: CodeNeptune
+  homepage: https://codeneptune.com/
+- name: WebDoux
+  homepage: https://webdoux.com/
+- name: Ocean Softwares
+  homepage: https://oceansoftwares.com/
+- name: SCR Soft Technologies
+  homepage: https://scrsoft.com/
+- name: Technosoft Business Solutions
+  homepage: https://technosoftcorp.com/
+- name: Aptiv India
+  homepage: https://www.aptiv.com/
+fresher_signals:
+- fresher
+- 0-1 yr
+- 0-1 year
+- 0-2 yr
+- 0-2 year
+- entry level
+- entry-level
+- intern
+- trainee
+- no experience
+negative_signals:
+- no jobs found
+- no open positions
+- no current openings
+- no openings

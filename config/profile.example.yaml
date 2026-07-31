@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Your profile — used for job scoring, resume/cover-letter tailoring and
+# application-form autofill.
+#
+#   cp config/profile.example.yaml config/profile.yaml
+#
+# config/profile.yaml is git-ignored, so your real details never leave your
+# machine. JobSonar falls back to this example file if profile.yaml is absent,
+# which keeps a fresh clone runnable — but scores will be meaningless until you
+# put your own skills in.
+# ---------------------------------------------------------------------------
+name: Your Name
+email: you@example.com
+phone: ""
+location: ""            # e.g. "Chennai, India"
+linkedin_url: ""
+github_url: ""
+portfolio_url: ""
+resume_path: ""          # absolute path to your resume PDF (used for uploads)
+years_experience: 0
+
+# Skills drive the keyword score: every `core` skill found in a posting is
+# worth up to 70 points in total, every `secondary` skill up to 30. List the
+# stack you actually want to be matched on — adding skills you don't have will
+# surface jobs you can't do.
+skills:
+  core: [React, Node.js, Express, MongoDB, JavaScript, TypeScript]
+  secondary: [Next.js, Redux, REST API, GraphQL, PostgreSQL, Docker, AWS, Git, HTML, CSS, Tailwind]
+
+# Short summary the LLM uses when tailoring cover letters. Two or three
+# sentences in your own voice works better than a keyword list.
+summary: >
+  Full-stack developer building web applications with React, Node.js,
+  Express and MongoDB.
+
+# Default answers for common application form fields, used to pre-fill
+# applications. Nothing is ever submitted automatically — you click submit.
+form_answers:
+  notice_period: "Immediate"
+  willing_to_relocate: "Yes"
+  work_authorization: "Yes"
+  expected_salary: ""
