@@ -289,22 +289,32 @@ def check_company(entry: dict, fresher_signals: list[str], negative_signals: lis
     # Strategy 1: Use explicit ATS config from companies.yaml
     if explicit_ats and explicit_token:
         from .ats import fetch_ats_jobs, infer_experience_level
-        params = {}
-        if explicit_ats == "greenhouse":
-            params = {"board_token": explicit_token}
-        elif explicit_ats == "lever":
-            params = {"site_slug": explicit_token}
-        elif explicit_ats == "ashby":
-            params = {"company_name": explicit_token}
-        elif explicit_ats == "keka":
-            params = {"subdomain": explicit_token}
-        else:
-            params = {f"{explicit_ats}_token": explicit_token}
+        # Each fetcher reads its token under a different key. The fallback
+        # "<platform>_token" is kept for unknown platforms but matches nothing
+        # in fetch_ats_jobs, so such a company simply falls through below.
+        param_keys = {
+            "greenhouse": "board_token",
+            "lever": "site_slug",
+            "ashby": "company_name",
+            "smartrecruiters": "company_id",
+            "rippling": "slug",
+            "keka": "subdomain",
+            "recruitee": "company",
+            "personio": "company",
+            "breezy": "company",
+            "workable": "company",
+            "bamboohr": "company",
+        }
+        params = {param_keys.get(explicit_ats, f"{explicit_ats}_token"): explicit_token}
 
         try:
             jobs = fetch_ats_jobs(explicit_ats, params)
-            jobs = _hydrate_job_details(jobs, careers_page_url, js_rendered=js_rendered)
-            return _filter_and_enrich(jobs, name, careers_page_url)
+            # Only commit to the explicit ATS if it actually yielded something.
+            # A stale or renamed token used to end the cascade here and drop the
+            # company entirely, even though Strategies 2-5 could still find it.
+            if jobs:
+                jobs = _hydrate_job_details(jobs, careers_page_url, js_rendered=js_rendered)
+                return _filter_and_enrich(jobs, name, careers_page_url)
         except Exception:
             pass
 
