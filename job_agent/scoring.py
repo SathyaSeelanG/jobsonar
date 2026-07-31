@@ -185,6 +185,23 @@ MAX_POSTED_AGE_DAYS = 3
 WATCHLIST_MAX_AGE_DAYS = 21
 
 
+# Direct ATS feeds get the same wider window, for the same reason plus one
+# more: what they report is not a posted date. Greenhouse sends updated_at,
+# Workable published_on, Recruitee published_at, SmartRecruiters releasedDate,
+# Workday only relative prose ("Posted 5 Days Ago"); Lever and Ashby send
+# nothing at all. Under the board-tuned 3-day window that produced a perverse
+# split — a dateless Lever role was always kept, while the identical role on a
+# Greenhouse board was dropped on day 4 purely because it happened to carry a
+# timestamp. Widening here makes the ATS family consistent with itself.
+ATS_MAX_AGE_DAYS = 21
+
+_ATS_SOURCES = frozenset({
+    "greenhouse", "lever", "ashby", "workday", "smartrecruiters", "rippling",
+    "keka", "recruitee", "personio", "breezy", "workable", "bamboohr",
+    "jsonld", "nextdata",
+})
+
+
 def is_recently_posted(job, max_days: int = MAX_POSTED_AGE_DAYS) -> bool:
     """True unless the job's own posted_at date is older than max_days.
     Jobs with no parseable posted date are kept — we can't prove they're old."""
@@ -194,6 +211,8 @@ def is_recently_posted(job, max_days: int = MAX_POSTED_AGE_DAYS) -> bool:
     source = (getattr(job, "source", "") or "").lower()
     if source.startswith("watchlist"):
         max_days = max(max_days, WATCHLIST_MAX_AGE_DAYS)
+    elif source in _ATS_SOURCES:
+        max_days = max(max_days, ATS_MAX_AGE_DAYS)
 
     raw = getattr(job, "posted_at", "") or ""
     if not raw:
